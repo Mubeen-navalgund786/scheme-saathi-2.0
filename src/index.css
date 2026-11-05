@@ -1,0 +1,69 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --color-primary: #1F6B4A;
+    --color-primary-hover: #18563B;
+    --color-primary-light: #EBF4F0;
+    --color-accent: #E0A030;
+    --color-accent-hover: #C88D25;
+    --color-accent-text: #1B2A22;
+    --color-bg: #FBF8F1;
+    --color-surface: #FFFFFF;
+    --color-surface-subtle: #F3EFE6;
+    --color-text: #1B2A22;
+    --color-muted: #5B6860;
+    --color-border: #D9D4C4;
+    --color-border-subtle: #EBE7DC;
+    --color-cream: #FBF8F1;
+  }
+
+  .dark {
+    --color-primary: #2C8C62;
+    --color-primary-hover: #37A273;
+    --color-primary-light: #162C22;
+    --color-accent: #E0A030;
+    --color-accent-hover: #F0B243;
+    --color-accent-text: #16211B;
+    --color-bg: #0D1612;
+    --color-surface: #16211B;
+    --color-surface-subtle: #1E2E26;
+    --color-text: #F3EFE3;
+    --color-muted: #A9B7AE;
+    --color-border: #2C3B33;
+    --color-border-subtle: #223028;
+    --color-cream: #F3EFE3;
+  }
+
+  html, body {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  /* Minimum 44px touch targets on buttons and inputs where interactive */
+  button, a, input, select, textarea {
+    touch-action: manipulation;
+  }
+}
+
+/* Custom scrollbar for chat and drawers */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted);
+}

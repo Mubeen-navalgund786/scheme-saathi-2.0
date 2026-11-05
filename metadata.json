@@ -1,0 +1,6 @@
+{
+  "name": "Scheme Saathi",
+  "description": "Informational chatbot and portal helping Indian citizens find government schemes they qualify for, check eligibility, see required documents, and apply on official portals.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

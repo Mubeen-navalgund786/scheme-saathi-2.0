@@ -115,7 +115,7 @@ export const SchemeCard: React.FC<SchemeCardProps> = ({
               <div>
                 <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)] block mb-1 flex items-center gap-1">
                   <FileText className="w-3.5 h-3.5 text-[var(--color-muted)]" />
-                  Documents Required
+                  Documents
                 </span>
                 <ul className="text-xs text-[var(--color-text)] space-y-1 pl-1">
                   {scheme.documents.map((doc, idx) => (
@@ -153,7 +153,7 @@ export const SchemeCard: React.FC<SchemeCardProps> = ({
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-[var(--color-accent)] hover:brightness-95 text-[#1B2A22] transition-colors shadow-xs"
           >
-            <span>Apply on official site</span>
+            <span>Apply on official website</span>
             <ExternalLink className="w-3.5 h-3.5" />
           </a>
         </div>

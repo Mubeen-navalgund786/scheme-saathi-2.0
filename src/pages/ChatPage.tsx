@@ -7,10 +7,8 @@ import {
   Menu, 
   ThumbsUp, 
   ThumbsDown, 
-  ExternalLink, 
   CheckCircle2, 
   CheckSquare,
-  Sparkles,
   ArrowRight
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
@@ -46,6 +44,9 @@ export const ChatPage: React.FC = () => {
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [activeFeedbackMessageId, setActiveFeedbackMessageId] = useState<string | null>(null);
   const [thanksMessageId, setThanksMessageId] = useState<string | null>(null);
+  
+  // Transient safety messages (displayed on screen, but NEVER saved to localStorage)
+  const [transientSafetyMessages, setTransientSafetyMessages] = useState<ChatMessage[]>([]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -53,7 +54,7 @@ export const ChatPage: React.FC = () => {
   const isCancelledRef = useRef(false);
 
   // Sync active chat session
-  const activeChatId = chatId || currentChatId;
+  const activeChatId = chatId || currentChatId || (chats.length > 0 ? chats[0].id : null);
   const activeChat = chats.find((c) => c.id === activeChatId);
 
   useEffect(() => {
@@ -66,14 +67,15 @@ export const ChatPage: React.FC = () => {
         const idToSelect = currentChatId && chats.some((c) => c.id === currentChatId)
           ? currentChatId
           : chats[0].id;
-        setCurrentChatId(idToSelect);
-        navigate(`/chat/${idToSelect}`, { replace: true });
+        if (currentChatId !== idToSelect) {
+          setCurrentChatId(idToSelect);
+        }
       } else {
         const newId = createNewChat();
-        navigate(`/chat/${newId}`, { replace: true });
+        setCurrentChatId(newId);
       }
     }
-  }, [chatId, chats, currentChatId, setCurrentChatId, navigate, createNewChat]);
+  }, [chatId, chats, currentChatId, setCurrentChatId, createNewChat]);
 
   // Scroll to bottom whenever messages change or streaming updates
   const scrollToBottom = () => {
@@ -82,7 +84,7 @@ export const ChatPage: React.FC = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [activeChat?.messages, isTyping, streamedText]);
+  }, [activeChat?.messages, transientSafetyMessages, isTyping, streamedText]);
 
   // Clean up streaming timer on unmount
   useEffect(() => {
@@ -106,28 +108,59 @@ export const ChatPage: React.FC = () => {
     const text = (textToSend || inputText).trim();
     if (!text || isStreaming || isTyping) return;
 
+    // Reset textarea height and text
+    setInputText('');
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
+
     let targetChatId = activeChatId;
     if (!targetChatId) {
       targetChatId = createNewChat();
-      navigate(`/chat/${targetChatId}`, { replace: true });
     }
 
+    // Safety rule check: A request for an Aadhaar number, OTP, bank account number or password
+    // gets safety reply and NOTHING from that message is saved to localStorage
+    const reply = generateLocalReply(text, user);
+    if (reply.isSafetyWarning) {
+      const ephemeralUserMsg: ChatMessage = {
+        id: 'msg-transient-u-' + Date.now(),
+        role: 'user',
+        text,
+        createdAt: Date.now(),
+        timestamp: Date.now(),
+        isSafetyWarning: true,
+      };
+      const ephemeralBotMsg: ChatMessage = {
+        id: 'msg-transient-b-' + Date.now(),
+        role: 'bot',
+        text: reply.text,
+        createdAt: Date.now(),
+        timestamp: Date.now(),
+        isSafetyWarning: true,
+      };
+
+      setTransientSafetyMessages((prev) => [...prev, ephemeralUserMsg, ephemeralBotMsg]);
+      return;
+    }
+
+    // Normal message flow: save user message to chat
     const userMsg: ChatMessage = {
       id: 'msg-u-' + Date.now(),
       role: 'user',
       text,
+      schemeIds: [],
+      createdAt: Date.now(),
       timestamp: Date.now(),
     };
 
-    // Append user message
     appendMessage(targetChatId, userMsg);
-    setInputText('');
 
-    // Start bot reply workflow
-    executeBotReply(targetChatId, text);
+    // Start bot reply workflow with ~600ms animated typing dots
+    executeBotReply(targetChatId, text, reply);
   };
 
-  const executeBotReply = (chatSessionId: string, query: string) => {
+  const executeBotReply = (chatSessionId: string, _query: string, precomputedReply: BotResponseResult) => {
     setIsTyping(true);
     isCancelledRef.current = false;
 
@@ -139,21 +172,19 @@ export const ChatPage: React.FC = () => {
       }
       setIsTyping(false);
 
-      // 2. Generate local reply
-      const reply = generateLocalReply(query, user);
-      setStreamingTargetResult(reply);
+      setStreamingTargetResult(precomputedReply);
       setIsStreaming(true);
 
-      const words = reply.text.split(' ');
+      const words = precomputedReply.text.split(' ');
       let currentWordIndex = 0;
       let accumulated = '';
 
-      // Stream word by word (~25ms per word)
+      // 2. Stream word by word (about 25ms per word) with a blinking cursor
       streamTimerRef.current = setInterval(() => {
         if (isCancelledRef.current) {
           if (streamTimerRef.current) clearInterval(streamTimerRef.current);
           setIsStreaming(false);
-          finalizeMessage(chatSessionId, accumulated, reply);
+          finalizeMessage(chatSessionId, accumulated, precomputedReply);
           return;
         }
 
@@ -164,7 +195,7 @@ export const ChatPage: React.FC = () => {
         } else {
           if (streamTimerRef.current) clearInterval(streamTimerRef.current);
           setIsStreaming(false);
-          finalizeMessage(chatSessionId, accumulated, reply);
+          finalizeMessage(chatSessionId, accumulated, precomputedReply);
         }
       }, 25);
     }, 600);
@@ -188,25 +219,13 @@ export const ChatPage: React.FC = () => {
     completedText: string,
     targetResult: BotResponseResult
   ) => {
-    // If it's a safety warning, do not save or attach sensitive content
-    if (targetResult.isSafetyWarning) {
-      const botMsg: ChatMessage = {
-        id: 'msg-b-' + Date.now(),
-        role: 'assistant',
-        text: targetResult.text,
-        timestamp: Date.now(),
-      };
-      appendMessage(chatSessionId, botMsg);
-      setStreamedText('');
-      setStreamingTargetResult(null);
-      return;
-    }
-
     const botMsg: ChatMessage = {
       id: 'msg-b-' + Date.now(),
-      role: 'assistant',
+      role: 'bot',
       text: completedText || targetResult.text,
+      createdAt: Date.now(),
       timestamp: Date.now(),
+      schemeIds: targetResult.schemes?.map((s) => s.id) || [],
       schemes: targetResult.schemes,
       actionButton: targetResult.actionButton,
     };
@@ -219,6 +238,7 @@ export const ChatPage: React.FC = () => {
   const handleThumbsUp = (msgId: string) => {
     if (!activeChatId) return;
     const fb: FeedbackData = {
+      messageId: msgId,
       rating: 'up',
       timestamp: Date.now(),
     };
@@ -237,7 +257,7 @@ export const ChatPage: React.FC = () => {
   const handleFeedbackSubmit = (feedback: FeedbackData) => {
     if (activeChatId && activeFeedbackMessageId) {
       updateFeedback(activeChatId, activeFeedbackMessageId, feedback);
-      showToast('Feedback submitted. Thank you!', 'success');
+      showToast('Feedback saved. Thank you!', 'success');
     }
   };
 
@@ -248,6 +268,14 @@ export const ChatPage: React.FC = () => {
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputText(e.target.value.slice(0, 1000));
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 180)}px`;
+    }
+  };
+
   const handleMicClick = () => {
     setMicTooltip(true);
     setTimeout(() => {
@@ -255,56 +283,60 @@ export const ChatPage: React.FC = () => {
     }, 2500);
   };
 
-  const currentMessages = activeChat?.messages || [];
+  // Combine persisted messages with any in-memory transient safety messages
+  const persistentMessages = activeChat?.messages || [];
+  const allMessages = [...persistentMessages, ...transientSafetyMessages];
 
   return (
     <div className="flex h-screen bg-[var(--color-bg)] overflow-hidden">
-      {/* Sidebar */}
+      {/* Sidebar (260px) */}
       <ChatSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col h-full min-w-0 bg-[var(--color-bg)] relative">
-        {/* Header */}
-        <header className="h-14 px-4 border-b border-[var(--color-border)] bg-[var(--color-surface)]/90 backdrop-blur-md flex items-center justify-between shrink-0 z-20">
+      {/* Main Area */}
+      <main className="flex-1 flex flex-col h-full min-w-0 bg-[var(--color-bg)] relative">
+        {/* Header: chat title on left, theme toggle on right */}
+        <header className="h-16 px-4 sm:px-6 border-b border-[var(--color-border)] bg-[var(--color-surface)]/90 backdrop-blur-md flex items-center justify-between shrink-0 z-20">
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
               onClick={() => setSidebarOpen(true)}
               className="p-2 md:hidden text-[var(--color-muted)] hover:text-[var(--color-text)] rounded-xl hover:bg-[var(--color-surface-subtle)]"
-              aria-label="Open sidebar"
+              aria-label="Open sidebar navigation"
             >
               <Menu className="w-5 h-5" />
             </button>
-            <h1 className="text-sm font-bold text-[var(--color-text)] truncate">
-              {activeChat?.title || 'Scheme Saathi Chat'}
+            <h1 className="text-sm sm:text-base font-bold text-[var(--color-text)] truncate">
+              {activeChat?.title || 'New chat'}
             </h1>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <ThemeToggle />
           </div>
         </header>
 
-        {/* Message List */}
+        {/* Message List: scrollable, scrolls to newest message, aria-live polite */}
         <div 
           className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6"
           role="region"
           aria-label="Chat messages"
+          aria-live="polite"
         >
-          {currentMessages.length === 0 && !isTyping && !isStreaming ? (
+          {allMessages.length === 0 && !isTyping && !isStreaming ? (
             /* Empty Chat State */
-            <div className="max-w-xl mx-auto py-12 text-center">
+            <div className="max-w-xl mx-auto py-12 text-center my-auto">
               <div className="w-14 h-14 mx-auto rounded-2xl bg-[#1F6B4A] text-[#FBF8F1] flex items-center justify-center font-bold text-xl shadow-md mb-4">
                 <CheckSquare className="w-8 h-8 text-[#FBF8F1]" />
               </div>
               <h2 className="text-xl sm:text-2xl font-black text-[var(--color-text)] tracking-tight">
-                Ask about a government scheme
+                How can Scheme Saathi help you today?
               </h2>
               <p className="text-xs sm:text-sm text-[var(--color-muted)] mt-2 mb-6 max-w-md mx-auto leading-relaxed">
-                {t.greeting}
+                Discover government schemes, check your eligibility and find the support you need.
               </p>
 
-              <div className="flex flex-nowrap sm:grid sm:grid-cols-2 gap-3 text-left overflow-x-auto pb-2 sm:pb-0 scrollbar-none">
+              {/* Six suggestion chips, scrollable sideways on mobile */}
+              <div className="flex flex-nowrap sm:grid sm:grid-cols-2 gap-3 text-left overflow-x-auto pb-3 sm:pb-0 scrollbar-none">
                 {suggestionChips.map((chip) => (
                   <button
                     key={chip}
@@ -320,21 +352,21 @@ export const ChatPage: React.FC = () => {
             </div>
           ) : (
             <>
-              {currentMessages.map((msg) => (
+              {allMessages.map((msg) => (
                 <div
                   key={msg.id}
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   {msg.role === 'user' ? (
-                    /* User Bubble */
+                    /* User message in forest green with cream text */
                     <div className="max-w-lg bg-[#1F6B4A] text-[#FBF8F1] px-4.5 py-3 rounded-2xl rounded-tr-xs text-sm font-medium shadow-xs leading-relaxed break-words">
                       {msg.text}
                     </div>
                   ) : (
-                    /* Bot Bubble */
-                    <div className="flex items-start gap-3 max-w-2xl w-full" aria-live="polite">
-                      <div className="w-8 h-8 rounded-xl bg-[#1F6B4A] text-[#FBF8F1] flex items-center justify-center shrink-0 text-xs font-bold shadow-xs">
-                        SS
+                    /* Bot message in surface colour with small logo */
+                    <div className="flex items-start gap-3 max-w-2xl w-full">
+                      <div className="w-7 h-7 rounded-lg bg-[#1F6B4A] text-[#FBF8F1] flex items-center justify-center shrink-0 shadow-xs mt-0.5" aria-hidden="true">
+                        <CheckSquare className="w-4 h-4 text-[#FBF8F1]" />
                       </div>
                       <div className="space-y-3 flex-1 min-w-0">
                         {/* Text bubble */}
@@ -364,73 +396,75 @@ export const ChatPage: React.FC = () => {
                           </div>
                         )}
 
-                        {/* Feedback Row */}
-                        <div className="flex items-center gap-3 pt-1 text-xs text-[var(--color-muted)]">
-                          {thanksMessageId === msg.id ? (
-                            <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-md animate-in fade-in duration-150">
-                              Thanks for your feedback
-                            </span>
-                          ) : (
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-[11px]">Was this helpful?</span>
-                              <button
-                                type="button"
-                                onClick={() => handleThumbsUp(msg.id)}
-                                className={`p-1.5 rounded-lg hover:bg-[var(--color-surface-subtle)] transition-colors ${
-                                  msg.feedback?.rating === 'up'
-                                    ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40'
-                                    : 'text-[var(--color-muted)] hover:text-[var(--color-text)]'
-                                }`}
-                                aria-label="Thumbs up"
-                                title="Helpful"
-                              >
-                                <ThumbsUp className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleOpenThumbsDown(msg.id)}
-                                className={`p-1.5 rounded-lg hover:bg-[var(--color-surface-subtle)] transition-colors ${
-                                  msg.feedback?.rating === 'down'
-                                    ? 'text-rose-600 bg-rose-50 dark:bg-rose-950/40'
-                                    : 'text-[var(--color-muted)] hover:text-[var(--color-text)]'
-                                }`}
-                                aria-label="Thumbs down"
-                                title="Not helpful"
-                              >
-                                <ThumbsDown className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          )}
-                        </div>
+                        {/* Feedback Row (thumbs up & thumbs down), excluded for safety warnings */}
+                        {!msg.isSafetyWarning && (
+                          <div className="flex items-center gap-3 pt-1 text-xs text-[var(--color-muted)]">
+                            {thanksMessageId === msg.id ? (
+                              <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-md animate-in fade-in duration-150">
+                                Thanks for your feedback
+                              </span>
+                            ) : (
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[11px]">Was this helpful?</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleThumbsUp(msg.id)}
+                                  className={`p-1.5 rounded-lg hover:bg-[var(--color-surface-subtle)] transition-colors ${
+                                    msg.feedback?.rating === 'up'
+                                      ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40'
+                                      : 'text-[var(--color-muted)] hover:text-[var(--color-text)]'
+                                  }`}
+                                  aria-label="Thumbs up"
+                                  title="Helpful"
+                                >
+                                  <ThumbsUp className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenThumbsDown(msg.id)}
+                                  className={`p-1.5 rounded-lg hover:bg-[var(--color-surface-subtle)] transition-colors ${
+                                    msg.feedback?.rating === 'down'
+                                      ? 'text-rose-600 bg-rose-50 dark:bg-rose-950/40'
+                                      : 'text-[var(--color-muted)] hover:text-[var(--color-text)]'
+                                  }`}
+                                  aria-label="Thumbs down"
+                                  title="Not helpful"
+                                >
+                                  <ThumbsDown className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
                 </div>
               ))}
 
-              {/* Typing indicator */}
+              {/* Three animated dots for about 600 ms */}
               {isTyping && (
-                <div className="flex items-start gap-3 max-w-2xl" aria-live="polite">
-                  <div className="w-8 h-8 rounded-xl bg-[#1F6B4A] text-[#FBF8F1] flex items-center justify-center shrink-0 text-xs font-bold shadow-xs">
-                    SS
+                <div className="flex items-start gap-3 max-w-2xl">
+                  <div className="w-7 h-7 rounded-lg bg-[#1F6B4A] text-[#FBF8F1] flex items-center justify-center shrink-0 shadow-xs mt-0.5">
+                    <CheckSquare className="w-4 h-4 text-[#FBF8F1]" />
                   </div>
-                  <div className="bg-[var(--color-surface)] border border-[var(--color-border)] px-4 py-3 rounded-2xl rounded-tl-xs flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-[var(--color-muted)] animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-2 h-2 rounded-full bg-[var(--color-muted)] animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-2 h-2 rounded-full bg-[var(--color-muted)] animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <div className="bg-[var(--color-surface)] border border-[var(--color-border)] px-4 py-3 rounded-2xl rounded-tl-xs flex items-center gap-1.5 shadow-xs">
+                    <span className="w-2 h-2 rounded-full bg-[var(--color-primary)] animate-bounce [animation-delay:-0.3s]" />
+                    <span className="w-2 h-2 rounded-full bg-[var(--color-primary)] animate-bounce [animation-delay:-0.15s]" />
+                    <span className="w-2 h-2 rounded-full bg-[var(--color-primary)] animate-bounce" />
                   </div>
                 </div>
               )}
 
-              {/* Streaming bubble */}
+              {/* Streaming reply word by word with blinking cursor */}
               {isStreaming && (
-                <div className="flex items-start gap-3 max-w-2xl" aria-live="polite">
-                  <div className="w-8 h-8 rounded-xl bg-[#1F6B4A] text-[#FBF8F1] flex items-center justify-center shrink-0 text-xs font-bold shadow-xs">
-                    SS
+                <div className="flex items-start gap-3 max-w-2xl">
+                  <div className="w-7 h-7 rounded-lg bg-[#1F6B4A] text-[#FBF8F1] flex items-center justify-center shrink-0 shadow-xs mt-0.5">
+                    <CheckSquare className="w-4 h-4 text-[#FBF8F1]" />
                   </div>
                   <div className="bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] px-4.5 py-3.5 rounded-2xl rounded-tl-xs text-sm shadow-xs leading-relaxed whitespace-pre-wrap break-words">
                     {streamedText}
-                    <span className="inline-block w-2 h-4 ml-1 bg-[var(--color-primary)] animate-pulse align-middle" />
+                    <span className="inline-block w-2 h-4 ml-1 bg-[var(--color-primary)] animate-pulse align-middle" aria-hidden="true" />
                   </div>
                 </div>
               )}
@@ -440,43 +474,31 @@ export const ChatPage: React.FC = () => {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Suggestion Chips Bar */}
-        <div className="px-4 py-2 border-t border-[var(--color-border-subtle)] bg-[var(--color-surface)]/60 overflow-x-auto whitespace-nowrap scrollbar-none flex items-center gap-2">
-          {suggestionChips.map((chip) => (
-            <button
-              key={chip}
-              type="button"
-              onClick={() => handleSendMessage(chip)}
-              disabled={isStreaming || isTyping}
-              className="px-3 py-1.5 rounded-full text-xs font-medium border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-subtle)] hover:border-[var(--color-primary)] text-[var(--color-text)] transition-colors shrink-0 disabled:opacity-50"
-            >
-              {chip}
-            </button>
-          ))}
-        </div>
-
-        {/* Input Bar */}
+        {/* Input Bar at bottom: auto-growing textarea, Enter sends, Shift+Enter newline */}
         <div className="p-4 bg-[var(--color-surface)] border-t border-[var(--color-border)] shrink-0">
           <div className="max-w-4xl mx-auto">
             <div className="relative border border-[var(--color-border)] rounded-2xl bg-[var(--color-surface-subtle)] focus-within:ring-2 focus-within:ring-[var(--color-primary)] focus-within:border-transparent transition-all">
               <textarea
                 ref={textareaRef}
                 value={inputText}
-                onChange={(e) => setInputText(e.target.value.slice(0, 1000))}
+                onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
                 placeholder={t.askPlaceholder || "Ask about a scheme or service"}
-                rows={2}
-                disabled={isStreaming}
-                className="w-full p-3.5 pr-24 bg-transparent text-sm text-[var(--color-text)] placeholder:text-[var(--color-muted)] focus:outline-hidden resize-none"
+                rows={1}
+                maxLength={1000}
+                className="w-full p-3.5 pr-24 bg-transparent text-sm text-[var(--color-text)] placeholder:text-[var(--color-muted)] focus:outline-hidden resize-none min-h-[48px] max-h-[180px]"
+                aria-label="Ask about a scheme or service"
               />
 
-              {/* Action buttons inside textarea */}
-              <div className="absolute right-3 bottom-3 flex items-center gap-2">
+              {/* Action buttons inside input bar */}
+              <div className="absolute right-3 bottom-2.5 flex items-center gap-2">
                 {/* Voice Input Button */}
                 <div className="relative">
                   <button
                     type="button"
                     onClick={handleMicClick}
+                    onMouseEnter={() => setMicTooltip(true)}
+                    onMouseLeave={() => setMicTooltip(false)}
                     className="p-2 rounded-xl text-[var(--color-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)] transition-colors"
                     aria-label="Voice input"
                   >
@@ -500,7 +522,7 @@ export const ChatPage: React.FC = () => {
                     type="button"
                     onClick={handleStopStreaming}
                     className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs transition-colors"
-                    title="Stop streaming response"
+                    aria-label="Stop streaming response"
                   >
                     <Square className="w-3.5 h-3.5 fill-current" />
                     <span>Stop</span>
@@ -519,16 +541,18 @@ export const ChatPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Character counter & Disclaimer */}
+            {/* Footer line under input with character counter near limit */}
             <div className="flex items-center justify-between mt-2 px-1 text-[11px] text-[var(--color-muted)]">
               <span>{t.shortDisclaimer || 'Informational only. Always apply on the official government portal.'}</span>
-              <span className={inputText.length > 900 ? 'text-amber-600 font-bold' : ''}>
-                {inputText.length} / 1000
-              </span>
+              {inputText.length >= 800 && (
+                <span className={inputText.length >= 950 ? 'text-amber-600 font-bold' : ''}>
+                  {inputText.length} / 1000
+                </span>
+              )}
             </div>
           </div>
         </div>
-      </div>
+      </main>
 
       {/* Feedback modal for thumbs down */}
       <FeedbackModal

@@ -8,15 +8,19 @@ import {
   SupportedLanguage 
 } from '../types';
 
+import { MOCK_SCHEMES } from '../data/schemes';
+
 const KEYS = {
-  USER: 'scheme_saathi_user',
-  CHATS: 'scheme_saathi_chats',
+  USER: 'scheme-saathi-user',
+  CHATS: 'scheme-saathi-chats',
+  OLD_CHATS: 'scheme_saathi_chats',
   SAVED_SCHEMES: 'scheme_saathi_saved_schemes',
   NOTIFICATIONS: 'scheme_saathi_notifications',
   NOTIFICATION_SETTINGS: 'scheme_saathi_notification_settings',
   THEME: 'scheme_saathi_theme',
   LANGUAGE: 'scheme_saathi_language',
-  FEEDBACKS: 'scheme_saathi_feedbacks',
+  FEEDBACKS: 'scheme-saathi-feedback',
+  OLD_FEEDBACKS: 'scheme_saathi_feedbacks',
   REPORTS: 'scheme_saathi_reports',
 };
 
@@ -52,10 +56,45 @@ export const Storage = {
   },
 
   getChats(): ChatSession[] {
-    return getItem<ChatSession[]>(KEYS.CHATS, []);
+    const rawList = getItem<ChatSession[]>(KEYS.CHATS, []) || [];
+    const list = rawList.length > 0 ? rawList : getItem<ChatSession[]>(KEYS.OLD_CHATS, []);
+    
+    // Hydrate scheme objects from schemeIds if needed and ensure role is 'user' | 'bot'
+    return list.map((chat) => ({
+      ...chat,
+      messages: (chat.messages || []).map((msg) => {
+        const role = (msg.role === 'assistant' ? 'bot' : msg.role) as 'user' | 'bot';
+        const schemeIds = msg.schemeIds || (msg.schemes ? msg.schemes.map((s) => s.id) : []);
+        const schemes = msg.schemes && msg.schemes.length > 0 
+          ? msg.schemes 
+          : MOCK_SCHEMES.filter((s) => schemeIds.includes(s.id));
+        
+        return {
+          ...msg,
+          role,
+          schemeIds,
+          schemes,
+          createdAt: msg.createdAt || msg.timestamp || Date.now(),
+        };
+      }),
+    }));
   },
   setChats(chats: ChatSession[]): void {
-    setItem(KEYS.CHATS, chats);
+    // Ensure clean serialization as { id, role, text, schemeIds, createdAt }
+    const formatted = chats.map((c) => ({
+      ...c,
+      messages: (c.messages || []).map((m) => ({
+        id: m.id,
+        role: (m.role === 'assistant' ? 'bot' : m.role) as 'user' | 'bot',
+        text: m.text,
+        schemeIds: m.schemeIds || (m.schemes ? m.schemes.map((s) => s.id) : []),
+        createdAt: m.createdAt || m.timestamp || Date.now(),
+        ...(m.actionButton ? { actionButton: m.actionButton } : {}),
+        ...(m.feedback ? { feedback: m.feedback } : {}),
+        ...(m.feedbackSubmitted ? { feedbackSubmitted: true } : {}),
+      })),
+    }));
+    setItem(KEYS.CHATS, formatted);
   },
 
   getSavedSchemes(): string[] {
@@ -113,11 +152,18 @@ export const Storage = {
   },
 
   getFeedbacks(): FeedbackData[] {
-    return getItem<FeedbackData[]>(KEYS.FEEDBACKS, []);
+    const list = getItem<FeedbackData[]>(KEYS.FEEDBACKS, []);
+    return list.length > 0 ? list : getItem<FeedbackData[]>(KEYS.OLD_FEEDBACKS, []);
   },
   saveFeedback(fb: FeedbackData): void {
     const list = this.getFeedbacks();
-    list.push(fb);
+    const cleanEntry: FeedbackData = {
+      messageId: fb.messageId,
+      rating: fb.rating,
+      ...(fb.reason ? { reason: fb.reason } : {}),
+      ...(fb.comment ? { comment: fb.comment } : {}),
+    };
+    list.push(cleanEntry);
     setItem(KEYS.FEEDBACKS, list);
   },
 

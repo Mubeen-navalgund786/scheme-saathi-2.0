@@ -23,6 +23,8 @@ const ProfilePage = React.lazy(() =>
   import('./pages/ProfilePage').then((m) => ({ default: m.ProfilePage }))
 );
 
+import { getUser } from './lib/session';
+
 /**
  * Route Guard Component
  * Enforces sign-in and registration rules:
@@ -32,13 +34,34 @@ const ProfilePage = React.lazy(() =>
 function ProtectedRoute({ children }: { children: React.ReactElement }) {
   const { user } = useApp();
   const location = useLocation();
+  const current = getUser() || user;
 
-  if (!user || !user.signedIn) {
+  if (!current || !current.signedIn) {
     return <Navigate to="/signin" state={{ from: location }} replace />;
   }
 
-  if (!user.registered) {
+  if (!current.registered) {
     return <Navigate to="/register" replace />;
+  }
+
+  return children;
+}
+
+/**
+ * Register Route Guard
+ * - If not signed in, redirect to /signin
+ * - If already registered, redirect to /chat
+ */
+function RegisterRoute({ children }: { children: React.ReactElement }) {
+  const { user } = useApp();
+  const current = getUser() || user;
+
+  if (!current || !current.signedIn) {
+    return <Navigate to="/signin" replace />;
+  }
+
+  if (current.registered) {
+    return <Navigate to="/chat" replace />;
   }
 
   return children;
@@ -49,9 +72,10 @@ function ProtectedRoute({ children }: { children: React.ReactElement }) {
  */
 function PublicOnlyRoute({ children }: { children: React.ReactElement }) {
   const { user } = useApp();
+  const current = getUser() || user;
 
-  if (user && user.signedIn) {
-    if (user.registered) {
+  if (current && current.signedIn) {
+    if (current.registered) {
       return <Navigate to="/chat" replace />;
     } else {
       return <Navigate to="/register" replace />;
@@ -83,7 +107,14 @@ export default function App() {
                 </PublicOnlyRoute>
               }
             />
-            <Route path="/register" element={<RegisterPage />} />
+            <Route
+              path="/register"
+              element={
+                <RegisterRoute>
+                  <RegisterPage />
+                </RegisterRoute>
+              }
+            />
             <Route path="/library" element={<LibraryPage />} />
             <Route path="/help" element={<HelpPage />} />
 

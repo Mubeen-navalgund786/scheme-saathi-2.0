@@ -124,15 +124,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return saved;
   });
 
-  const setLanguage = (lang: SupportedLanguage) => {
+  const setLanguage = useCallback((lang: SupportedLanguage) => {
     setLanguageState(lang);
     Storage.setLanguage(lang);
-    if (user) {
-      const updated = { ...user, language: lang };
-      setUser(updated);
+    const current = getUser();
+    if (current) {
+      const updated: UserSession = { ...current, language: lang };
       saveUser(updated);
+      setUser(updated);
     }
-  };
+  }, []);
 
   const t = TRANSLATIONS[language] || TRANSLATIONS.English;
 
@@ -294,7 +295,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const newId = 'chat-' + Date.now();
     const newChat: ChatSession = {
       id: newId,
-      title: 'New conversation',
+      title: 'New chat',
       createdAt: Date.now(),
       updatedAt: Date.now(),
       messages: [],
@@ -374,6 +375,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updateFeedback = useCallback((chatId: string, messageId: string, feedback: FeedbackData) => {
+    const feedbackWithId: FeedbackData = { ...feedback, messageId };
     setChats((prev) => {
       const updated = prev.map((c) => {
         if (c.id !== chatId) return c;
@@ -381,7 +383,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           ...c,
           messages: c.messages.map((m) =>
             m.id === messageId
-              ? { ...m, feedback, feedbackSubmitted: true }
+              ? { ...m, feedback: feedbackWithId, feedbackSubmitted: true }
               : m
           ),
         };
@@ -389,7 +391,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       Storage.setChats(updated);
       return updated;
     });
-    Storage.saveFeedback(feedback);
+    Storage.saveFeedback(feedbackWithId);
   }, []);
 
   // Auth actions
@@ -446,35 +448,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     saveUser(registered);
     setUser(registered);
-    setLanguage(data.language);
+    setLanguageState(data.language);
+    Storage.setLanguage(data.language);
     seedNotifications(data.categories);
 
-    // Initialize welcome conversation for immediate chatting
+    // Initialize first empty chat if none exists
     const existingChats = Storage.getChats();
     if (existingChats.length === 0) {
-      const welcomeChatId = 'chat-' + Date.now();
-      const welcomeChat: ChatSession = {
-        id: welcomeChatId,
-        title: 'Schemes for ' + data.name,
+      const newChatId = 'chat-' + Date.now();
+      const emptyChat: ChatSession = {
+        id: newChatId,
+        title: 'New chat',
         createdAt: Date.now(),
         updatedAt: Date.now(),
-        messages: [
-          {
-            id: 'msg-welcome',
-            role: 'assistant',
-            text: `Namaste ${data.name}! Welcome to Scheme Saathi. Your profile is set up as a ${data.categories.join(', ')} residing in ${data.state}.\n\nAsk me anything about government schemes you qualify for, check your eligibility, or see document requirements!`,
-            timestamp: Date.now(),
-          },
-        ],
+        messages: [],
       };
-      setChats([welcomeChat]);
-      Storage.setChats([welcomeChat]);
-      setCurrentChatId(welcomeChatId);
+      setChats([emptyChat]);
+      Storage.setChats([emptyChat]);
+      setCurrentChatId(newChatId);
     }
 
     showToast('Profile created successfully!', 'success');
     return registered;
-  }, [setLanguage, seedNotifications, showToast]);
+  }, [seedNotifications, showToast]);
 
   const updateProfile = useCallback((updates: Partial<UserSession>) => {
     setUser((prev) => {

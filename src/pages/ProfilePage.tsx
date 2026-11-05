@@ -8,7 +8,8 @@ import {
   Check, 
   X,
   MessageSquare,
-  ShieldAlert
+  ShieldAlert,
+  ArrowLeft
 } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
 import { useApp } from '../context/AppContext';
@@ -109,12 +110,30 @@ export const ProfilePage: React.FC = () => {
     navigate('/');
   };
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/chat');
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-bg)]">
       <Navbar />
 
-      <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <div>
+          <button
+            type="button"
+            onClick={handleBack}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-subtle)] text-xs font-semibold text-[var(--color-text)] transition-colors mb-4 shadow-xs"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back</span>
+          </button>
+
           <h1 className="text-2xl sm:text-4xl font-black text-[var(--color-text)] tracking-tight">
             Profile & Preferences
           </h1>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   HelpCircle, 
   ChevronDown, 
@@ -8,7 +9,8 @@ import {
   AlertCircle, 
   ShieldCheck, 
   PhoneCall, 
-  Building
+  Building,
+  ArrowLeft
 } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
 import { Storage } from '../lib/storage';
@@ -50,7 +52,16 @@ const FAQS: FAQItem[] = [
 ];
 
 export const HelpPage: React.FC = () => {
+  const navigate = useNavigate();
   const { user, showToast } = useApp();
+
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/chat');
+    }
+  };
 
   const [expandedFaq, setExpandedFaq] = useState<string | null>('faq-1');
 
@@ -88,8 +99,18 @@ export const HelpPage: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-[var(--color-bg)]">
       <Navbar />
 
-      <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+      <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         <div>
+          <button
+            type="button"
+            onClick={handleBack}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-subtle)] text-xs font-semibold text-[var(--color-text)] transition-colors mb-4 shadow-xs"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back</span>
+          </button>
+
           <div className="flex items-center gap-2 mb-1">
             <HelpCircle className="w-5 h-5 text-[var(--color-primary)]" />
             <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-primary)]">

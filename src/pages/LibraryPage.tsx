@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Search, X, BookOpen, Bookmark, ExternalLink, CheckCircle2 } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Search, X, BookOpen, Bookmark, ExternalLink, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
 import { SchemeCard } from '../components/SchemeCard';
 import { MOCK_SCHEMES } from '../data/schemes';
@@ -8,8 +8,17 @@ import { Scheme, SchemeCategory } from '../types';
 import { useApp } from '../context/AppContext';
 
 export const LibraryPage: React.FC = () => {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { isSchemeSaved, toggleSaveScheme } = useApp();
+
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/');
+    }
+  };
 
   const initialCat = (searchParams.get('category') as SchemeCategory) || 'All';
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCat);
@@ -77,6 +86,16 @@ export const LibraryPage: React.FC = () => {
         {/* Title and search bar */}
         <div className="space-y-4">
           <div>
+            <button
+              type="button"
+              onClick={handleBack}
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-subtle)] text-xs font-semibold text-[var(--color-text)] transition-colors mb-4 shadow-xs"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back</span>
+            </button>
+
             <h1 className="text-2xl sm:text-4xl font-black text-[var(--color-text)] tracking-tight">
               Scheme library
             </h1>

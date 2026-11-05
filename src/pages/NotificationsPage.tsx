@@ -6,7 +6,8 @@ import {
   CheckCheck, 
   ArrowRight, 
   ExternalLink,
-  Edit3
+  Edit3,
+  ArrowLeft
 } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
 import { NotificationSettingsModal } from '../components/NotificationSettingsModal';
@@ -50,6 +51,14 @@ export const NotificationsPage: React.FC = () => {
            filter.toLowerCase().includes(notif.category.toLowerCase());
   });
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/chat');
+    }
+  };
+
   const handleCardClick = (notif: AppNotification) => {
     if (!notif.read) {
       markNotificationAsRead(notif.id);
@@ -61,16 +70,27 @@ export const NotificationsPage: React.FC = () => {
       <Navbar />
 
       <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Top header row */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-[var(--color-text)] tracking-tight">
-              Notifications
-            </h1>
-            <p className="text-xs sm:text-sm text-[var(--color-muted)] mt-1">
-              Important alerts, revision dates, and new benefits in your registered categories.
-            </p>
-          </div>
+        <div>
+          <button
+            type="button"
+            onClick={handleBack}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-subtle)] text-xs font-semibold text-[var(--color-text)] transition-colors mb-4 shadow-xs"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back</span>
+          </button>
+
+          {/* Top header row */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-black text-[var(--color-text)] tracking-tight">
+                Notifications
+              </h1>
+              <p className="text-xs sm:text-sm text-[var(--color-muted)] mt-1">
+                Important alerts, revision dates, and new benefits in your registered categories.
+              </p>
+            </div>
 
           <div className="flex items-center gap-3 shrink-0">
             {unreadNotificationCount > 0 && (
@@ -95,6 +115,7 @@ export const NotificationsPage: React.FC = () => {
             </button>
           </div>
         </div>
+      </div>
 
         {/* User categories row with Edit link */}
         <div className="p-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] flex flex-wrap items-center justify-between gap-3">

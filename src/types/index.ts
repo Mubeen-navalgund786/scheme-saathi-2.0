@@ -64,17 +64,20 @@ export interface UserProfile {
 }
 
 export interface FeedbackData {
+  messageId?: string;
   rating: 'up' | 'down';
   reason?: 'Wrong scheme' | 'Outdated information' | 'Unclear' | 'Other';
   comment?: string;
-  timestamp: number;
+  timestamp?: number;
 }
 
 export interface ChatMessage {
   id: string;
-  role: 'user' | 'assistant';
+  role: 'user' | 'bot' | 'assistant';
   text: string;
-  timestamp: number;
+  schemeIds?: string[];
+  createdAt: number;
+  timestamp?: number;
   schemes?: Scheme[];
   feedback?: FeedbackData;
   feedbackSubmitted?: boolean;
@@ -82,6 +85,7 @@ export interface ChatMessage {
     label: string;
     route: string;
   };
+  isSafetyWarning?: boolean;
 }
 
 export interface ChatSession {

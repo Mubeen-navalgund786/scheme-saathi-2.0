@@ -93,9 +93,19 @@ export const EligibilityPage: React.FC = () => {
     }
   };
 
-  const handleBack = () => {
+  const handleExitBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/chat');
+    }
+  };
+
+  const handleStepBack = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+    } else {
+      handleExitBack();
     }
   };
 
@@ -115,6 +125,16 @@ export const EligibilityPage: React.FC = () => {
       <Navbar />
 
       <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 py-8">
+        <button
+          type="button"
+          onClick={handleExitBack}
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-subtle)] text-xs font-semibold text-[var(--color-text)] transition-colors mb-4 shadow-xs"
+          aria-label="Go back"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back</span>
+        </button>
+
         {!results ? (
           /* Wizard Form */
           <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl shadow-xl p-6 sm:p-10">
@@ -319,9 +339,9 @@ export const EligibilityPage: React.FC = () => {
             <div className="mt-10 pt-6 border-t border-[var(--color-border-subtle)] flex items-center justify-between gap-4">
               <button
                 type="button"
-                onClick={handleBack}
-                disabled={currentStep === 1}
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-[var(--color-border)] text-sm font-semibold text-[var(--color-text)] hover:bg-[var(--color-surface-subtle)] disabled:opacity-30 disabled:pointer-events-none"
+                onClick={handleStepBack}
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-[var(--color-border)] text-sm font-semibold text-[var(--color-text)] hover:bg-[var(--color-surface-subtle)] transition-colors"
+                aria-label={currentStep === 1 ? 'Go back' : 'Previous step'}
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>Back</span>

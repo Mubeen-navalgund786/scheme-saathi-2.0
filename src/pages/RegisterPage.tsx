@@ -5,6 +5,8 @@ import { useApp } from '../context/AppContext';
 import { INDIAN_STATES_AND_UTS, CITIZEN_CATEGORIES } from '../data/indianStates';
 import { SupportedLanguage } from '../types';
 
+import { getUser } from '../lib/session';
+
 export const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, registerUser } = useApp();
@@ -19,6 +21,14 @@ export const RegisterPage: React.FC = () => {
   const [nameError, setNameError] = useState('');
   const [stateError, setStateError] = useState('');
   const [categoryError, setCategoryError] = useState('');
+
+  // If the user is already registered and opens /register, redirect to /chat
+  React.useEffect(() => {
+    const current = getUser() || user;
+    if (current && current.registered) {
+      navigate('/chat', { replace: true });
+    }
+  }, [user, navigate]);
 
   const toggleCategory = (catId: string) => {
     setCategoryError('');

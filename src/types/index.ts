@@ -23,6 +23,17 @@ export interface Scheme {
   officialUrl: string;
   source: string;
   lastUpdated: string;
+  shortName?: string;
+  aliases?: string[];
+  summary?: string;
+  purpose?: string;
+  beneficiaries?: string;
+  financialDetails?: string;
+  howItWorks?: string;
+  eligibilityCriteria?: string[];
+  ineligibilityReasons?: string[];
+  applicationSteps?: string[];
+  offlineApplication?: string;
 }
 
 export type EligibilityStatus = 'Likely eligible' | 'Check eligibility' | 'Not eligible';
@@ -43,7 +54,19 @@ export interface EligibilityAnswers {
   categories: string[];
 }
 
-export type SupportedLanguage = 'English' | 'Hindi' | 'Kannada' | 'Tamil';
+export type SupportedLanguage = 
+  | 'English'
+  | 'Kannada'
+  | 'Hindi'
+  | 'Tamil'
+  | 'Telugu'
+  | 'Malayalam'
+  | 'Marathi'
+  | 'Bengali'
+  | 'Gujarati'
+  | 'Punjabi'
+  | 'Odia'
+  | 'Urdu';
 
 export interface UserProfile {
   id?: string;
@@ -86,6 +109,10 @@ export interface ChatMessage {
     route: string;
   };
   isSafetyWarning?: boolean;
+  intent?: string;
+  targetSchemeId?: string;
+  language?: SupportedLanguage;
+  translations?: Partial<Record<SupportedLanguage, string>>;
 }
 
 export interface ChatSession {

@@ -22,7 +22,7 @@ import { MOCK_SCHEMES } from '../data/schemes';
 import { useApp } from '../context/AppContext';
 
 export const LandingPage: React.FC = () => {
-  const { isAuthenticated, isOnboarded, signInAsAsha } = useApp();
+  const { isAuthenticated, isOnboarded, signInAsAsha, t } = useApp();
   const navigate = useNavigate();
 
   const handleStartChatting = () => {
@@ -95,10 +95,10 @@ export const LandingPage: React.FC = () => {
         <section className="relative pt-12 pb-20 overflow-hidden">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-[var(--color-text)] max-w-4xl mx-auto leading-tight sm:leading-none">
-              Find government schemes you qualify for
+              {t.landingHeroTitle || 'Find government schemes you qualify for'}
             </h1>
             <p className="mt-5 text-base sm:text-xl text-[var(--color-muted)] max-w-2xl mx-auto leading-relaxed">
-              Ask in plain language. Check your eligibility in a few questions. Get the documents list and the official link to apply.
+              {t.landingHeroSubtitle || 'Ask in plain language. Check your eligibility in a few questions. Get the documents list and the official link to apply.'}
             </p>
 
 
@@ -329,10 +329,10 @@ export const LandingPage: React.FC = () => {
           <button
             type="button"
             onClick={handleStartChatting}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--color-accent)] hover:brightness-95 text-[#1B2A22] text-sm font-bold shadow-md transition-all active:scale-98"
-            aria-label="Start chatting"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--color-accent)] hover:brightness-95 text-[#1B2A22] text-sm font-bold shadow-md transition-all active:scale-98 cursor-pointer"
+            aria-label={t.startChatting || 'Start chatting'}
           >
-            <span>Start chatting</span>
+            <span>{t.startChatting || 'Start chatting'}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -340,7 +340,7 @@ export const LandingPage: React.FC = () => {
         {/* Disclaimer Band */}
         <div className="bg-amber-50 dark:bg-amber-950/40 border-y border-amber-200 dark:border-amber-900/60 py-4 px-4 sm:px-6 text-center">
           <p className="text-xs sm:text-sm font-medium text-amber-900 dark:text-amber-200 max-w-4xl mx-auto">
-            Scheme Saathi is an informational service. It is not a government website. Always apply on the official government portal.
+            {t.disclaimer || 'Scheme Saathi is an informational service. It is not a government website. Always apply on the official government portal.'}
           </p>
         </div>
       </main>

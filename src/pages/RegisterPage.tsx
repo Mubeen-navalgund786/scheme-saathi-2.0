@@ -4,16 +4,17 @@ import { Check, CheckSquare, AlertCircle, ArrowRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { INDIAN_STATES_AND_UTS, CITIZEN_CATEGORIES } from '../data/indianStates';
 import { SupportedLanguage } from '../types';
+import { LANGUAGE_OPTIONS } from '../lib/translations';
 
 import { getUser } from '../lib/session';
 
 export const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, registerUser } = useApp();
+  const { user, registerUser, language: globalLanguage, setLanguage: setGlobalLanguage, t } = useApp();
 
   const [name, setName] = useState(user?.name || 'Asha Verma');
   const [state, setState] = useState(user?.state || 'Uttar Pradesh');
-  const [language, setLanguage] = useState<SupportedLanguage>(user?.language || 'English');
+  const [language, setLanguage] = useState<SupportedLanguage>(user?.language || globalLanguage || 'English');
   const [categories, setCategories] = useState<string[]>(user?.categories?.length ? user.categories : ['Farmer']);
   const [notifyInApp, setNotifyInApp] = useState(true);
   const [notifyEmail, setNotifyEmail] = useState(true);
@@ -179,18 +180,23 @@ export const RegisterPage: React.FC = () => {
                   htmlFor="register-language"
                   className="block text-xs font-bold uppercase tracking-wider text-[var(--color-text)] mb-1.5"
                 >
-                  Preferred Language
+                  {t.preferredLanguage || 'Preferred Language'}
                 </label>
                 <select
                   id="register-language"
                   value={language}
-                  onChange={(e) => setLanguage(e.target.value as SupportedLanguage)}
+                  onChange={(e) => {
+                    const nextLang = e.target.value as SupportedLanguage;
+                    setLanguage(nextLang);
+                    setGlobalLanguage(nextLang);
+                  }}
                   className="w-full p-3.5 text-sm rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] text-[var(--color-text)] focus:outline-hidden focus:ring-2 focus:ring-[var(--color-primary)] cursor-pointer"
                 >
-                  <option value="English">English</option>
-                  <option value="Hindi">हिन्दी</option>
-                  <option value="Kannada">ಕನ್ನಡ</option>
-                  <option value="Tamil">தமிழ்</option>
+                  {LANGUAGE_OPTIONS.map((opt) => (
+                    <option key={opt.code} value={opt.code}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>

@@ -18,7 +18,7 @@ import { useApp } from '../context/AppContext';
 
 export const EligibilityPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, updateProfile } = useApp();
+  const { user, updateProfile, t } = useApp();
 
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 6;
@@ -340,20 +340,20 @@ export const EligibilityPage: React.FC = () => {
               <button
                 type="button"
                 onClick={handleStepBack}
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-[var(--color-border)] text-sm font-semibold text-[var(--color-text)] hover:bg-[var(--color-surface-subtle)] transition-colors"
-                aria-label={currentStep === 1 ? 'Go back' : 'Previous step'}
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-[var(--color-border)] text-sm font-semibold text-[var(--color-text)] hover:bg-[var(--color-surface-subtle)] transition-colors cursor-pointer"
+                aria-label={currentStep === 1 ? 'Go back' : (t.previous || 'Previous step')}
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>Back</span>
+                <span>{currentStep === 1 ? 'Back' : (t.previous || 'Previous')}</span>
               </button>
 
               <button
                 type="button"
                 onClick={handleNext}
                 disabled={!isCurrentStepValid()}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--color-accent)] hover:brightness-95 text-[#1B2A22] text-sm font-bold shadow-md transition-all disabled:opacity-40 disabled:pointer-events-none"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--color-accent)] hover:brightness-95 text-[#1B2A22] text-sm font-bold shadow-md transition-all disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
               >
-                <span>{currentStep === totalSteps ? 'See eligible schemes' : 'Next'}</span>
+                <span>{currentStep === totalSteps ? (t.seeResults || 'See eligible schemes') : (t.next || 'Next')}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -368,7 +368,7 @@ export const EligibilityPage: React.FC = () => {
                   Evaluation Complete
                 </span>
                 <h1 className="text-2xl sm:text-3xl font-black text-[var(--color-text)] mt-1">
-                  Your Scheme Eligibility Results
+                  {t.eligibleResultsHeading || 'Your Scheme Eligibility Results'}
                 </h1>
                 <p className="text-xs sm:text-sm text-[var(--color-muted)] mt-1">
                   Based on the details you gave. Confirm on the official site.
@@ -379,15 +379,15 @@ export const EligibilityPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleRestart}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-subtle)] text-xs font-semibold text-[var(--color-text)]"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-subtle)] text-xs font-semibold text-[var(--color-text)] cursor-pointer"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Retake test</span>
+                  <span>{t.resetAnswers || 'Retake test'}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => navigate('/chat')}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--color-primary)] text-[#FBF8F1] text-xs font-bold shadow-xs hover:bg-[var(--color-primary-hover)]"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--color-primary)] text-[#FBF8F1] text-xs font-bold shadow-xs hover:bg-[var(--color-primary-hover)] cursor-pointer"
                 >
                   <span>Ask in Chat</span>
                   <ArrowRight className="w-3.5 h-3.5" />

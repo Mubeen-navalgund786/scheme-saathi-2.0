@@ -142,8 +142,22 @@ export const Storage = {
 
   getLanguage(): SupportedLanguage {
     const lang = localStorage.getItem(KEYS.LANGUAGE);
-    if (lang === 'English' || lang === 'Hindi' || lang === 'Kannada' || lang === 'Tamil') {
-      return lang;
+    const validLanguages: SupportedLanguage[] = [
+      'English',
+      'Kannada',
+      'Hindi',
+      'Tamil',
+      'Telugu',
+      'Malayalam',
+      'Marathi',
+      'Bengali',
+      'Gujarati',
+      'Punjabi',
+      'Odia',
+      'Urdu',
+    ];
+    if (lang && validLanguages.includes(lang as SupportedLanguage)) {
+      return lang as SupportedLanguage;
     }
     return 'English';
   },

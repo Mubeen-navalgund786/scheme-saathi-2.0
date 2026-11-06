@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { FeedbackData } from '../types';
+import { useApp } from '../context/AppContext';
 
 interface FeedbackModalProps {
   isOpen: boolean;
@@ -8,11 +9,11 @@ interface FeedbackModalProps {
   onSubmit: (feedback: FeedbackData) => void;
 }
 
-const REASONS: Array<'Wrong scheme' | 'Outdated information' | 'Unclear' | 'Other'> = [
-  'Wrong scheme',
-  'Outdated information',
-  'Unclear',
-  'Other',
+const REASON_KEYS: Array<{ id: 'Wrong scheme' | 'Outdated information' | 'Unclear' | 'Other'; key: string }> = [
+  { id: 'Wrong scheme', key: 'wrongScheme' },
+  { id: 'Outdated information', key: 'outdatedInfo' },
+  { id: 'Unclear', key: 'unclear' },
+  { id: 'Other', key: 'otherReason' },
 ];
 
 export const FeedbackModal: React.FC<FeedbackModalProps> = ({
@@ -20,6 +21,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
   onClose,
   onSubmit,
 }) => {
+  const { t } = useApp();
   const [selectedReason, setSelectedReason] = useState<'Wrong scheme' | 'Outdated information' | 'Unclear' | 'Other'>('Wrong scheme');
   const [comment, setComment] = useState('');
 
@@ -65,10 +67,10 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
         </button>
 
         <h3 id="feedback-dialog-title" className="text-lg font-bold text-[var(--color-text)] mb-2">
-          Help us improve this answer
+          {t.feedbackTitle || 'Help us improve this answer'}
         </h3>
         <p className="text-sm text-[var(--color-muted)] mb-5">
-          Tell us why this response was not helpful so we can refine scheme records.
+          {t.whatWasWrong || 'Tell us why this response was not helpful so we can refine scheme records.'}
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -77,33 +79,36 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
               Reason
             </legend>
             <div className="space-y-2">
-              {REASONS.map((reason) => (
-                <label
-                  key={reason}
-                  className={`flex items-center gap-3 p-3 rounded-xl border text-sm cursor-pointer transition-colors ${
-                    selectedReason === reason
-                      ? 'border-[var(--color-primary)] bg-[var(--color-primary-light)] font-medium text-[var(--color-text)]'
-                      : 'border-[var(--color-border)] hover:bg-[var(--color-surface-subtle)] text-[var(--color-text)]'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="feedback-reason"
-                    value={reason}
-                    checked={selectedReason === reason}
-                    onChange={() => setSelectedReason(reason)}
-                    className="accent-[var(--color-primary)]"
-                  />
-                  <span>{reason}</span>
-                </label>
-              ))}
+              {REASON_KEYS.map((item) => {
+                const label = (t as any)[item.key] || item.id;
+                return (
+                  <label
+                    key={item.id}
+                    className={`flex items-center gap-3 p-3 rounded-xl border text-sm cursor-pointer transition-colors ${
+                      selectedReason === item.id
+                        ? 'border-[var(--color-primary)] bg-[var(--color-primary-light)] font-medium text-[var(--color-text)]'
+                        : 'border-[var(--color-border)] hover:bg-[var(--color-surface-subtle)] text-[var(--color-text)]'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="feedback-reason"
+                      value={item.id}
+                      checked={selectedReason === item.id}
+                      onChange={() => setSelectedReason(item.id)}
+                      className="accent-[var(--color-primary)]"
+                    />
+                    <span>{label}</span>
+                  </label>
+                );
+              })}
             </div>
           </fieldset>
 
           <div>
             <div className="flex justify-between items-center mb-1">
               <label htmlFor="feedback-comment" className="text-xs font-semibold text-[var(--color-muted)]">
-                Additional comments (optional)
+                {t.commentsOptional || 'Additional comments (optional)'}
               </label>
               <span className="text-[11px] text-[var(--color-muted)]">
                 {comment.length} / 500
@@ -123,15 +128,15 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl border border-[var(--color-border)] text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-surface-subtle)]"
+              className="px-4 py-2.5 rounded-xl border border-[var(--color-border)] text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-surface-subtle)] cursor-pointer"
             >
-              Cancel
+              {t.cancel || 'Cancel'}
             </button>
             <button
               type="submit"
-              className="px-5 py-2.5 rounded-xl bg-[var(--color-primary)] text-[#FBF8F1] text-sm font-semibold hover:bg-[var(--color-primary-hover)] shadow-xs"
+              className="px-5 py-2.5 rounded-xl bg-[var(--color-primary)] text-[#FBF8F1] text-sm font-semibold hover:bg-[var(--color-primary-hover)] shadow-xs cursor-pointer"
             >
-              Send feedback
+              {t.submitFeedback || 'Send feedback'}
             </button>
           </div>
         </form>

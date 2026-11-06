@@ -9,15 +9,220 @@ import {
   ThumbsDown, 
   CheckCircle2, 
   CheckSquare,
-  ArrowRight
+  ArrowRight,
+  ExternalLink
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { ChatSidebar } from '../components/ChatSidebar';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { SchemeCard } from '../components/SchemeCard';
 import { FeedbackModal } from '../components/FeedbackModal';
-import { generateLocalReply, BotResponseResult } from '../lib/responder';
+import { generateLocalReply, getLocalizedMessageText, BotResponseResult } from '../lib/responder';
 import { ChatMessage, FeedbackData } from '../types';
+
+/**
+ * Parses inline formatting: markdown links [label](url), raw URLs, bold **text**, and italic *text*.
+ */
+function renderFormattedInline(text: string): React.ReactNode {
+  if (!text) return null;
+
+  const pattern = /(\[([^\]]+)\]\((https?:\/\/[^\s)]+)\))|(https?:\/\/[^\s)]+)|(\*\*[^*]+\*\*)|(\*[^*]+\*)/g;
+  const nodes: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      nodes.push(text.slice(lastIndex, match.index));
+    }
+
+    if (match[1] && match[2] && match[3]) {
+      const label = match[2];
+      const url = match[3];
+      nodes.push(
+        <a
+          key={match.index}
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[var(--color-primary)] font-semibold underline hover:brightness-90 inline-flex items-center gap-1 break-all"
+        >
+          <span>{label}</span>
+          <ExternalLink className="w-3 h-3 inline-block shrink-0" aria-hidden="true" />
+        </a>
+      );
+    } else if (match[4]) {
+      const url = match[4];
+      nodes.push(
+        <a
+          key={match.index}
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[var(--color-primary)] font-semibold underline hover:brightness-90 inline-flex items-center gap-1 break-all"
+        >
+          <span>{url}</span>
+          <ExternalLink className="w-3 h-3 inline-block shrink-0" aria-hidden="true" />
+        </a>
+      );
+    } else if (match[5]) {
+      const boldText = match[5].slice(2, -2);
+      nodes.push(
+        <strong key={match.index} className="font-bold text-[var(--color-text)]">
+          {renderFormattedInline(boldText)}
+        </strong>
+      );
+    } else if (match[6]) {
+      const italicText = match[6].slice(1, -1);
+      nodes.push(
+        <em key={match.index} className="italic text-[var(--color-muted)]">
+          {renderFormattedInline(italicText)}
+        </em>
+      );
+    }
+
+    lastIndex = pattern.lastIndex;
+  }
+
+  if (lastIndex < text.length) {
+    nodes.push(text.slice(lastIndex));
+  }
+
+  return nodes.length > 0 ? nodes : text;
+}
+
+/**
+ * Structured renderer for bot responses with headings, checklists, tables, and links.
+ */
+const MessageTextRenderer: React.FC<{ content: string; isStreaming?: boolean }> = ({ content, isStreaming }) => {
+  const blocks = content.split('\n\n');
+
+  return (
+    <div className="space-y-3 text-sm leading-relaxed break-words">
+      {blocks.map((block, bIdx) => {
+        const trimmed = block.trim();
+        if (!trimmed) return null;
+
+        // Headings: ### Heading
+        if (trimmed.startsWith('### ')) {
+          const headingText = trimmed.replace(/^###\s+/, '');
+          return (
+            <h3
+              key={bIdx}
+              className="text-base font-bold text-[var(--color-text)] pt-1 pb-1.5 border-b border-[var(--color-border-subtle)]"
+            >
+              {renderFormattedInline(headingText)}
+            </h3>
+          );
+        }
+
+        // Markdown Table: | col1 | col2 |
+        if (
+          trimmed.includes('|') &&
+          trimmed.split('\n').filter(Boolean).length >= 2 &&
+          trimmed.split('\n').every((l) => l.trim().startsWith('|') && l.trim().endsWith('|'))
+        ) {
+          const rows = trimmed.split('\n').map((r) => r.trim()).filter(Boolean);
+          const headerRow = rows[0].slice(1, -1).split('|').map((c) => c.trim());
+          const dataRows = rows.slice(2).map((r) => r.slice(1, -1).split('|').map((c) => c.trim()));
+          return (
+            <div key={bIdx} className="overflow-x-auto my-2 rounded-xl border border-[var(--color-border)]">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-[var(--color-surface-subtle)] border-b border-[var(--color-border)]">
+                  <tr>
+                    {headerRow.map((cell, cIdx) => (
+                      <th key={cIdx} className="p-2.5 font-bold text-[var(--color-text)]">
+                        {renderFormattedInline(cell)}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--color-border-subtle)]">
+                  {dataRows.map((row, rIdx) => (
+                    <tr key={rIdx} className="hover:bg-[var(--color-surface-subtle)]/50">
+                      {row.map((cell, cIdx) => (
+                        <td key={cIdx} className="p-2.5 text-[var(--color-text)]">
+                          {renderFormattedInline(cell)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+        }
+
+        // Standard lines in block
+        const lines = block.split('\n');
+        return (
+          <div key={bIdx} className="space-y-1.5">
+            {lines.map((line, lIdx) => {
+              const lTrim = line.trim();
+              if (!lTrim) return null;
+
+              // Bullet item: • or -
+              if (lTrim.startsWith('• ') || lTrim.startsWith('- ')) {
+                const text = lTrim.replace(/^[•-]\s+/, '');
+                return (
+                  <div key={lIdx} className="flex items-start gap-2 pl-1">
+                    <span className="text-[var(--color-primary)] font-bold shrink-0 mt-0.5">•</span>
+                    <span className="flex-1">{renderFormattedInline(text)}</span>
+                  </div>
+                );
+              }
+
+              // Question / info indicator: ❓
+              if (lTrim.startsWith('❓ ')) {
+                const text = lTrim.replace(/^❓\s+/, '');
+                return (
+                  <div key={lIdx} className="flex items-start gap-2 pl-1 p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs">
+                    <span className="text-amber-600 font-bold shrink-0">❓</span>
+                    <span className="flex-1 font-medium">{renderFormattedInline(text)}</span>
+                  </div>
+                );
+              }
+
+              // Ineligibility / exclusion indicator: ❌
+              if (lTrim.startsWith('❌ ')) {
+                const text = lTrim.replace(/^❌\s+/, '');
+                return (
+                  <div key={lIdx} className="flex items-start gap-2 pl-1 text-xs">
+                    <span className="text-rose-600 font-bold shrink-0">❌</span>
+                    <span className="flex-1">{renderFormattedInline(text)}</span>
+                  </div>
+                );
+              }
+
+              // Numbered list item: 1. ...
+              if (/^\d+\.\s+/.test(lTrim)) {
+                const match = lTrim.match(/^(\d+\.)\s+(.*)/);
+                if (match) {
+                  return (
+                    <div key={lIdx} className="flex items-start gap-2 pl-1">
+                      <span className="text-[var(--color-primary)] font-bold text-xs shrink-0 mt-0.5">
+                        {match[1]}
+                      </span>
+                      <span className="flex-1">{renderFormattedInline(match[2])}</span>
+                    </div>
+                  );
+                }
+              }
+
+              return <p key={lIdx}>{renderFormattedInline(line)}</p>;
+            })}
+          </div>
+        );
+      })}
+      {isStreaming && (
+        <span
+          className="inline-block w-2 h-4 ml-1 bg-[var(--color-primary)] animate-pulse align-middle"
+          aria-hidden="true"
+        />
+      )}
+    </div>
+  );
+};
 
 export const ChatPage: React.FC = () => {
   const { chatId } = useParams<{ chatId?: string }>();
@@ -31,6 +236,7 @@ export const ChatPage: React.FC = () => {
     appendMessage, 
     updateFeedback, 
     showToast,
+    language,
     t
   } = useApp();
 
@@ -96,12 +302,12 @@ export const ChatPage: React.FC = () => {
   }, []);
 
   const suggestionChips = [
-    'Schemes for farmers',
-    'Check my eligibility',
-    'Documents needed',
-    'Scholarships for students',
-    'Schemes for women entrepreneurs',
-    'Health schemes',
+    { label: t.suggestionFarmer || 'Schemes for farmers', query: t.suggestionFarmer || 'Schemes for farmers' },
+    { label: t.suggestionEligibility || 'Check my eligibility', query: t.suggestionEligibility || 'Check my eligibility' },
+    { label: t.suggestionDocs || 'Documents needed', query: t.suggestionDocs || 'Documents needed' },
+    { label: t.suggestionStudent || 'Scholarships for students', query: t.suggestionStudent || 'Scholarships for students' },
+    { label: t.suggestionWomen || 'Schemes for women entrepreneurs', query: t.suggestionWomen || 'Schemes for women entrepreneurs' },
+    { label: t.suggestionHealth || 'Health schemes', query: t.suggestionHealth || 'Health schemes' },
   ];
 
   const handleSendMessage = (textToSend?: string) => {
@@ -119,9 +325,8 @@ export const ChatPage: React.FC = () => {
       targetChatId = createNewChat();
     }
 
-    // Safety rule check: A request for an Aadhaar number, OTP, bank account number or password
-    // gets safety reply and NOTHING from that message is saved to localStorage
-    const reply = generateLocalReply(text, user);
+    // Safety rule check and intent generation with active conversation history and selected language
+    const reply = generateLocalReply(text, user, activeChat?.messages, language);
     if (reply.isSafetyWarning) {
       const ephemeralUserMsg: ChatMessage = {
         id: 'msg-transient-u-' + Date.now(),
@@ -130,6 +335,7 @@ export const ChatPage: React.FC = () => {
         createdAt: Date.now(),
         timestamp: Date.now(),
         isSafetyWarning: true,
+        language,
       };
       const ephemeralBotMsg: ChatMessage = {
         id: 'msg-transient-b-' + Date.now(),
@@ -138,6 +344,7 @@ export const ChatPage: React.FC = () => {
         createdAt: Date.now(),
         timestamp: Date.now(),
         isSafetyWarning: true,
+        language,
       };
 
       setTransientSafetyMessages((prev) => [...prev, ephemeralUserMsg, ephemeralBotMsg]);
@@ -152,6 +359,7 @@ export const ChatPage: React.FC = () => {
       schemeIds: [],
       createdAt: Date.now(),
       timestamp: Date.now(),
+      language,
     };
 
     appendMessage(targetChatId, userMsg);
@@ -228,6 +436,9 @@ export const ChatPage: React.FC = () => {
       schemeIds: targetResult.schemes?.map((s) => s.id) || [],
       schemes: targetResult.schemes,
       actionButton: targetResult.actionButton,
+      language,
+      intent: targetResult.intent,
+      targetSchemeId: targetResult.schemes?.[0]?.id,
     };
 
     appendMessage(chatSessionId, botMsg);
@@ -306,7 +517,7 @@ export const ChatPage: React.FC = () => {
               <Menu className="w-5 h-5" />
             </button>
             <h1 className="text-sm sm:text-base font-bold text-[var(--color-text)] truncate">
-              {activeChat?.title || 'New chat'}
+              {activeChat?.title || t.newChat || 'New chat'}
             </h1>
           </div>
 
@@ -329,22 +540,22 @@ export const ChatPage: React.FC = () => {
                 <CheckSquare className="w-8 h-8 text-[#FBF8F1]" />
               </div>
               <h2 className="text-xl sm:text-2xl font-black text-[var(--color-text)] tracking-tight">
-                How can Scheme Saathi help you today?
+                {t.howCanHelp || 'How can Scheme Saathi help you today?'}
               </h2>
               <p className="text-xs sm:text-sm text-[var(--color-muted)] mt-2 mb-6 max-w-md mx-auto leading-relaxed">
-                Discover government schemes, check your eligibility and find the support you need.
+                {t.chatSubheading || 'Discover government schemes, check your eligibility and find the support you need.'}
               </p>
 
               {/* Six suggestion chips, scrollable sideways on mobile */}
               <div className="flex flex-nowrap sm:grid sm:grid-cols-2 gap-3 text-left overflow-x-auto pb-3 sm:pb-0 scrollbar-none">
-                {suggestionChips.map((chip) => (
+                {suggestionChips.map((chip, idx) => (
                   <button
-                    key={chip}
+                    key={idx}
                     type="button"
-                    onClick={() => handleSendMessage(chip)}
-                    className="p-3.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-subtle)] hover:border-[var(--color-primary)] text-sm font-semibold text-[var(--color-text)] shadow-xs transition-all flex items-center justify-between group active:scale-98 shrink-0 w-64 sm:w-auto"
+                    onClick={() => handleSendMessage(chip.query)}
+                    className="p-3.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-subtle)] hover:border-[var(--color-primary)] text-sm font-semibold text-[var(--color-text)] shadow-xs transition-all flex items-center justify-between group active:scale-98 shrink-0 w-64 sm:w-auto cursor-pointer"
                   >
-                    <span>{chip}</span>
+                    <span>{chip.label}</span>
                     <ArrowRight className="w-4 h-4 text-[var(--color-muted)] group-hover:text-[var(--color-primary)] group-hover:translate-x-1 transition-transform shrink-0" />
                   </button>
                 ))}
@@ -360,7 +571,7 @@ export const ChatPage: React.FC = () => {
                   {msg.role === 'user' ? (
                     /* User message in forest green with cream text */
                     <div className="max-w-lg bg-[#1F6B4A] text-[#FBF8F1] px-4.5 py-3 rounded-2xl rounded-tr-xs text-sm font-medium shadow-xs leading-relaxed break-words">
-                      {msg.text}
+                      {getLocalizedMessageText(msg, language)}
                     </div>
                   ) : (
                     /* Bot message in surface colour with small logo */
@@ -370,15 +581,15 @@ export const ChatPage: React.FC = () => {
                       </div>
                       <div className="space-y-3 flex-1 min-w-0">
                         {/* Text bubble */}
-                        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] px-4.5 py-3.5 rounded-2xl rounded-tl-xs text-sm shadow-xs leading-relaxed whitespace-pre-wrap break-words">
-                          {msg.text}
+                        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] px-4.5 py-3.5 rounded-2xl rounded-tl-xs text-sm shadow-xs leading-relaxed break-words">
+                          <MessageTextRenderer content={getLocalizedMessageText(msg, language)} />
 
                           {msg.actionButton && (
                             <div className="mt-3 pt-3 border-t border-[var(--color-border-subtle)]">
                               <button
                                 type="button"
                                 onClick={() => navigate(msg.actionButton!.route)}
-                                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--color-accent)] text-[#1B2A22] text-xs font-bold shadow-xs hover:brightness-95 transition-colors"
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--color-accent)] text-[#1B2A22] text-xs font-bold shadow-xs hover:brightness-95 transition-colors cursor-pointer"
                               >
                                 <span>{msg.actionButton.label}</span>
                                 <ArrowRight className="w-3.5 h-3.5" />
@@ -401,15 +612,15 @@ export const ChatPage: React.FC = () => {
                           <div className="flex items-center gap-3 pt-1 text-xs text-[var(--color-muted)]">
                             {thanksMessageId === msg.id ? (
                               <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-md animate-in fade-in duration-150">
-                                Thanks for your feedback
+                                {t.thanksFeedback || 'Thanks for your feedback'}
                               </span>
                             ) : (
                               <div className="flex items-center gap-1.5">
-                                <span className="text-[11px]">Was this helpful?</span>
+                                <span className="text-[11px]">{t.wasThisHelpful || 'Was this helpful?'}</span>
                                 <button
                                   type="button"
                                   onClick={() => handleThumbsUp(msg.id)}
-                                  className={`p-1.5 rounded-lg hover:bg-[var(--color-surface-subtle)] transition-colors ${
+                                  className={`p-1.5 rounded-lg hover:bg-[var(--color-surface-subtle)] transition-colors cursor-pointer ${
                                     msg.feedback?.rating === 'up'
                                       ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40'
                                       : 'text-[var(--color-muted)] hover:text-[var(--color-text)]'
@@ -422,7 +633,7 @@ export const ChatPage: React.FC = () => {
                                 <button
                                   type="button"
                                   onClick={() => handleOpenThumbsDown(msg.id)}
-                                  className={`p-1.5 rounded-lg hover:bg-[var(--color-surface-subtle)] transition-colors ${
+                                  className={`p-1.5 rounded-lg hover:bg-[var(--color-surface-subtle)] transition-colors cursor-pointer ${
                                     msg.feedback?.rating === 'down'
                                       ? 'text-rose-600 bg-rose-50 dark:bg-rose-950/40'
                                       : 'text-[var(--color-muted)] hover:text-[var(--color-text)]'
@@ -462,9 +673,8 @@ export const ChatPage: React.FC = () => {
                   <div className="w-7 h-7 rounded-lg bg-[#1F6B4A] text-[#FBF8F1] flex items-center justify-center shrink-0 shadow-xs mt-0.5">
                     <CheckSquare className="w-4 h-4 text-[#FBF8F1]" />
                   </div>
-                  <div className="bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] px-4.5 py-3.5 rounded-2xl rounded-tl-xs text-sm shadow-xs leading-relaxed whitespace-pre-wrap break-words">
-                    {streamedText}
-                    <span className="inline-block w-2 h-4 ml-1 bg-[var(--color-primary)] animate-pulse align-middle" aria-hidden="true" />
+                  <div className="bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] px-4.5 py-3.5 rounded-2xl rounded-tl-xs text-sm shadow-xs leading-relaxed break-words">
+                    <MessageTextRenderer content={streamedText} isStreaming={true} />
                   </div>
                 </div>
               )}
@@ -511,7 +721,7 @@ export const ChatPage: React.FC = () => {
                       role="tooltip"
                       className="absolute bottom-full right-0 mb-2 px-2.5 py-1 text-[11px] font-semibold text-[#FBF8F1] bg-[#1B2A22] rounded-md shadow-lg whitespace-nowrap animate-in fade-in duration-150 z-30"
                     >
-                      Voice input is coming soon
+                      {t.voiceComingSoon || 'Voice input is coming soon'}
                     </div>
                   )}
                 </div>
@@ -521,19 +731,19 @@ export const ChatPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleStopStreaming}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs transition-colors"
-                    aria-label="Stop streaming response"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer"
+                    aria-label={t.stopStreaming || 'Stop streaming response'}
                   >
                     <Square className="w-3.5 h-3.5 fill-current" />
-                    <span>Stop</span>
+                    <span>{t.stopStreaming || 'Stop'}</span>
                   </button>
                 ) : (
                   <button
                     type="button"
                     onClick={() => handleSendMessage()}
                     disabled={!inputText.trim() || isTyping}
-                    className="p-2.5 rounded-xl bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[#FBF8F1] transition-colors disabled:opacity-40 disabled:hover:bg-[var(--color-primary)] shadow-xs"
-                    aria-label="Send message"
+                    className="p-2.5 rounded-xl bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[#FBF8F1] transition-colors disabled:opacity-40 disabled:hover:bg-[var(--color-primary)] shadow-xs cursor-pointer"
+                    aria-label={t.sendMessage || 'Send message'}
                   >
                     <Send className="w-4 h-4" />
                   </button>

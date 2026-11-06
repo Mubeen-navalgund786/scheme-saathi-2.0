@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { SupportedLanguage } from '../types';
+import { LANGUAGE_OPTIONS } from '../lib/translations';
 
 interface Props {
   isOpen: boolean;
@@ -186,7 +187,7 @@ export const ChatSidebar: React.FC<Props> = ({ isOpen, onClose }) => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search chats..."
+              placeholder={t.searchChats || 'Search chats...'}
               className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] text-[var(--color-text)] focus:outline-hidden focus:ring-1 focus:ring-[var(--color-primary)]"
               aria-label="Search chats"
             />
@@ -267,12 +268,12 @@ export const ChatSidebar: React.FC<Props> = ({ isOpen, onClose }) => {
           {/* Recent Chats Section */}
           <div>
             <div className="px-3 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-[var(--color-muted)]">
-              Recent
+              {t.recent || 'Recent'}
             </div>
 
             {filteredChats.length === 0 ? (
               <p className="px-3 py-3 text-xs text-[var(--color-muted)] italic">
-                {searchQuery ? 'No chats match search' : 'No recent chats yet'}
+                {searchQuery ? t.noChatsMatch : t.noRecentChats}
               </p>
             ) : (
               <div className="space-y-1">
@@ -321,7 +322,11 @@ export const ChatSidebar: React.FC<Props> = ({ isOpen, onClose }) => {
                             className="flex items-center gap-2 flex-1 text-left min-w-0"
                           >
                             <MessageSquare className="w-3.5 h-3.5 shrink-0 opacity-70" />
-                            <span className="truncate">{chat.title || 'Conversation'}</span>
+                            <span className="truncate">
+                              {(!chat.title || chat.title.toLowerCase() === 'new chat' || chat.title === 'ಹೊಸ ಚಾಟ್' || chat.title === 'नई चैट')
+                                ? t.newChat
+                                : chat.title}
+                            </span>
                           </button>
 
                           {/* 3-dots Menu Button */}
@@ -350,7 +355,7 @@ export const ChatSidebar: React.FC<Props> = ({ isOpen, onClose }) => {
                                   className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-[var(--color-surface-subtle)] text-[var(--color-text)] text-left"
                                 >
                                   <Edit2 className="w-3 h-3 text-[var(--color-muted)]" />
-                                  <span>Rename</span>
+                                  <span>{t.rename || 'Rename'}</span>
                                 </button>
                                 <button
                                   type="button"
@@ -358,7 +363,7 @@ export const ChatSidebar: React.FC<Props> = ({ isOpen, onClose }) => {
                                   className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 text-left"
                                 >
                                   <Trash2 className="w-3 h-3 text-rose-500" />
-                                  <span>Delete</span>
+                                  <span>{t.delete || 'Delete'}</span>
                                 </button>
                               </div>
                             )}
@@ -376,31 +381,33 @@ export const ChatSidebar: React.FC<Props> = ({ isOpen, onClose }) => {
         {/* Bottom Area: Help, Language Selector, User Profile */}
         <div className="p-3 border-t border-[var(--color-border-subtle)] space-y-2 bg-[var(--color-surface)]">
           {/* Help link */}
+          {/* Help link */}
           <Link
             to="/help"
             onClick={onClose}
             className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-[var(--color-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-subtle)] transition-colors"
           >
             <HelpCircle className="w-4 h-4" />
-            <span>Help & grievance</span>
+            <span>{t.helpAndGrievance || 'Help & grievance'}</span>
           </Link>
 
           {/* Language selector */}
           <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-[var(--color-surface-subtle)] text-xs">
             <div className="flex items-center gap-2 text-[var(--color-muted)]">
               <Globe className="w-3.5 h-3.5" />
-              <span>Language</span>
+              <span>{t.language || 'Language'}</span>
             </div>
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value as SupportedLanguage)}
-              className="bg-transparent font-medium text-[var(--color-text)] focus:outline-hidden cursor-pointer"
+              className="bg-transparent font-medium text-[var(--color-text)] focus:outline-hidden cursor-pointer text-xs"
               aria-label="Select language"
             >
-              <option value="English">English</option>
-              <option value="Hindi">हिन्दी</option>
-              <option value="Kannada">ಕನ್ನಡ</option>
-              <option value="Tamil">தமிழ்</option>
+              {LANGUAGE_OPTIONS.map((opt) => (
+                <option key={opt.code} value={opt.code} className="bg-[var(--color-surface)] text-[var(--color-text)]">
+                  {opt.label}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -429,8 +436,8 @@ export const ChatSidebar: React.FC<Props> = ({ isOpen, onClose }) => {
               type="button"
               onClick={handleSignOut}
               className="p-2 text-[var(--color-muted)] hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors"
-              aria-label="Sign out"
-              title="Sign out"
+              aria-label={t.signOut || 'Sign out'}
+              title={t.signOut || 'Sign out'}
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -448,10 +455,10 @@ export const ChatSidebar: React.FC<Props> = ({ isOpen, onClose }) => {
         >
           <div className="w-full max-w-sm bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-xl p-5 relative">
             <h3 id="delete-chat-confirm-title" className="text-base font-bold text-[var(--color-text)] mb-2">
-              Delete chat?
+              {t.deleteChatTitle || 'Delete chat?'}
             </h3>
             <p className="text-xs text-[var(--color-muted)] mb-5 leading-relaxed">
-              Are you sure you want to delete this chat session? This action cannot be undone.
+              {t.deleteChatConfirm || 'Are you sure you want to delete this chat session? This action cannot be undone.'}
             </p>
             <div className="flex items-center justify-end gap-2.5">
               <button
@@ -459,14 +466,14 @@ export const ChatSidebar: React.FC<Props> = ({ isOpen, onClose }) => {
                 onClick={() => setDeleteConfirmChatId(null)}
                 className="px-3.5 py-2 rounded-xl border border-[var(--color-border)] text-xs font-semibold text-[var(--color-text)] hover:bg-[var(--color-surface-subtle)]"
               >
-                Cancel
+                {t.cancel || 'Cancel'}
               </button>
               <button
                 type="button"
                 onClick={handleConfirmDelete}
                 className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs"
               >
-                Delete
+                {t.delete || 'Delete'}
               </button>
             </div>
           </div>

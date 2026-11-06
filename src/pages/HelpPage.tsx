@@ -53,7 +53,7 @@ const FAQS: FAQItem[] = [
 
 export const HelpPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, showToast } = useApp();
+  const { user, showToast, t } = useApp();
 
   const handleBack = () => {
     if (window.history.length > 1) {
@@ -114,21 +114,21 @@ export const HelpPage: React.FC = () => {
           <div className="flex items-center gap-2 mb-1">
             <HelpCircle className="w-5 h-5 text-[var(--color-primary)]" />
             <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-primary)]">
-              Support Center
+              {t.helpAndGrievance || 'Support Center'}
             </span>
           </div>
           <h1 className="text-2xl sm:text-4xl font-black text-[var(--color-text)] tracking-tight">
-            Help and grievance
+            {t.helpTitle || 'Help and grievance'}
           </h1>
           <p className="text-xs sm:text-sm text-[var(--color-muted)] mt-1">
-            Frequently asked questions, official citizen helplines, and grievance resolution portals.
+            {t.helpSubtitle || 'Frequently asked questions, official citizen helplines, and grievance resolution portals.'}
           </p>
         </div>
 
         {/* FAQ Section */}
         <section className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl p-6 sm:p-8 shadow-sm">
           <h2 className="text-xl font-bold text-[var(--color-text)] mb-6">
-            Frequently Asked Questions
+            {t.faqTitle || 'Frequently Asked Questions'}
           </h2>
 
           <div className="space-y-3">

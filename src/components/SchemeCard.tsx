@@ -1,24 +1,26 @@
 import React from 'react';
-import { Bookmark, ExternalLink, CheckCircle2, AlertCircle, FileText } from 'lucide-react';
+import { Bookmark, ExternalLink, CheckCircle2, AlertCircle, HelpCircle, FileText } from 'lucide-react';
 import { Scheme, EligibilityStatus } from '../types';
 import { useApp } from '../context/AppContext';
+import { getLocalizedScheme, getLocalizedCategory, getLocalizedReason } from '../lib/schemeTranslations';
 
 interface SchemeCardProps {
   scheme: Scheme;
-  status?: EligibilityStatus;
+  status?: EligibilityStatus | 'Eligibility unknown';
   statusReasons?: string[];
   compact?: boolean;
   onOpenDetails?: (scheme: Scheme) => void;
 }
 
 export const SchemeCard: React.FC<SchemeCardProps> = ({
-  scheme,
+  scheme: rawScheme,
   status = 'Likely eligible',
   statusReasons,
   compact = false,
   onOpenDetails,
 }) => {
-  const { toggleSaveScheme, isSchemeSaved } = useApp();
+  const { toggleSaveScheme, isSchemeSaved, t, language } = useApp();
+  const scheme = getLocalizedScheme(rawScheme, language);
   const saved = isSchemeSaved(scheme.id);
 
   const getStatusBadge = () => {
@@ -27,20 +29,29 @@ export const SchemeCard: React.FC<SchemeCardProps> = ({
         return (
           <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-300 dark:border-emerald-800/80 px-2.5 py-1 rounded-md">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-            Likely eligible
+            {t.likelyEligible || 'Likely eligible'}
           </span>
         );
       case 'Check eligibility':
         return (
           <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/70 border border-amber-300 dark:border-amber-800/80 px-2.5 py-1 rounded-md">
             <AlertCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-            Check eligibility
+            {t.checkEligibilityStatus || 'Check eligibility'}
           </span>
         );
       case 'Not eligible':
         return (
           <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 px-2.5 py-1 rounded-md">
-            Not eligible
+            <AlertCircle className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
+            {t.notEligible || 'Not eligible'}
+          </span>
+        );
+      case 'Eligibility unknown':
+      default:
+        return (
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 px-2.5 py-1 rounded-md">
+            <HelpCircle className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
+            {t.eligibilityUnknown || 'Eligibility unknown'}
           </span>
         );
     }
@@ -57,7 +68,7 @@ export const SchemeCard: React.FC<SchemeCardProps> = ({
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
               <span className="text-xs font-medium text-[var(--color-muted)]">
-                {scheme.category} · {scheme.level === 'central' ? 'Central Scheme' : 'State Scheme'}
+                {getLocalizedCategory(scheme.category, language)} · {scheme.level === 'central' ? (t.centralScheme || 'Central Scheme') : (t.stateScheme || 'State Scheme')}
               </span>
             </div>
             <h3 className="text-base font-bold text-[var(--color-text)] leading-snug">
@@ -70,8 +81,8 @@ export const SchemeCard: React.FC<SchemeCardProps> = ({
               type="button"
               onClick={() => toggleSaveScheme(scheme.id)}
               className="p-2 rounded-lg text-[var(--color-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-subtle)] transition-colors"
-              aria-label={saved ? `Remove ${scheme.name} from saved` : `Save ${scheme.name}`}
-              title={saved ? 'Remove bookmark' : 'Bookmark scheme'}
+              aria-label={saved ? (t.removeSaved || `Remove ${scheme.name} from saved`) : (t.saveScheme || `Save ${scheme.name}`)}
+              title={saved ? (t.removeSaved || 'Remove bookmark') : (t.saveScheme || 'Bookmark scheme')}
             >
               <Bookmark className={`w-4 h-4 ${saved ? 'fill-[var(--color-accent)] text-[var(--color-accent)]' : ''}`} />
             </button>
@@ -84,7 +95,7 @@ export const SchemeCard: React.FC<SchemeCardProps> = ({
             {statusReasons.map((reason, idx) => (
               <p key={idx} className="flex items-start gap-1.5">
                 <span className="text-[var(--color-primary)] font-bold">·</span>
-                <span>{reason}</span>
+                <span>{getLocalizedReason(reason, language)}</span>
               </p>
             ))}
           </div>
@@ -94,7 +105,7 @@ export const SchemeCard: React.FC<SchemeCardProps> = ({
         <div className="py-3 space-y-3 text-sm">
           <div>
             <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)] block mb-0.5">
-              Benefit
+              {t.benefit || 'Benefit'}
             </span>
             <p className="text-[var(--color-text)] font-medium">
               {scheme.benefit}
@@ -105,7 +116,7 @@ export const SchemeCard: React.FC<SchemeCardProps> = ({
             <>
               <div>
                 <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)] block mb-0.5">
-                  Eligibility
+                  {t.eligibility || 'Eligibility'}
                 </span>
                 <p className="text-[var(--color-text)] text-xs leading-relaxed">
                   {scheme.eligibility}
@@ -115,7 +126,7 @@ export const SchemeCard: React.FC<SchemeCardProps> = ({
               <div>
                 <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)] block mb-1 flex items-center gap-1">
                   <FileText className="w-3.5 h-3.5 text-[var(--color-muted)]" />
-                  Documents
+                  {t.documents || 'Documents'}
                 </span>
                 <ul className="text-xs text-[var(--color-text)] space-y-1 pl-1">
                   {scheme.documents.map((doc, idx) => (
@@ -134,7 +145,7 @@ export const SchemeCard: React.FC<SchemeCardProps> = ({
       {/* Footer */}
       <div className="pt-3 border-t border-[var(--color-border-subtle)] flex flex-wrap items-center justify-between gap-3 mt-2">
         <span className="text-[11px] text-[var(--color-muted)]">
-          Source: {scheme.source} · Updated {scheme.lastUpdated}
+          {t.source || 'Source'}: {scheme.source} · {t.updated || 'Updated'} {scheme.lastUpdated}
         </span>
 
         <div className="flex items-center gap-2">
@@ -144,7 +155,7 @@ export const SchemeCard: React.FC<SchemeCardProps> = ({
               onClick={() => onOpenDetails(scheme)}
               className="text-xs font-medium text-[var(--color-primary)] hover:underline px-2.5 py-1.5"
             >
-              View details
+              {t.viewDetails || 'View details'}
             </button>
           )}
           <a
@@ -153,7 +164,7 @@ export const SchemeCard: React.FC<SchemeCardProps> = ({
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-[var(--color-accent)] hover:brightness-95 text-[#1B2A22] transition-colors shadow-xs"
           >
-            <span>Apply on official website</span>
+            <span>{t.applyOfficialWebsite || 'Apply on official website'}</span>
             <ExternalLink className="w-3.5 h-3.5" />
           </a>
         </div>

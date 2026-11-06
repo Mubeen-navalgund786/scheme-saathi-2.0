@@ -15,6 +15,7 @@ import { Navbar } from '../components/Navbar';
 import { useApp } from '../context/AppContext';
 import { INDIAN_STATES_AND_UTS, CITIZEN_CATEGORIES, OCCUPATIONS } from '../data/indianStates';
 import { SupportedLanguage } from '../types';
+import { LANGUAGE_OPTIONS } from '../lib/translations';
 
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -23,7 +24,9 @@ export const ProfilePage: React.FC = () => {
     updateProfile, 
     deleteAllChats, 
     deleteAccount, 
-    showToast 
+    showToast,
+    setLanguage: setGlobalLanguage,
+    t
   } = useApp();
 
   // Form state
@@ -135,10 +138,10 @@ export const ProfilePage: React.FC = () => {
           </button>
 
           <h1 className="text-2xl sm:text-4xl font-black text-[var(--color-text)] tracking-tight">
-            Profile & Preferences
+            {t.profileTitle || 'Profile & Preferences'}
           </h1>
           <p className="text-xs sm:text-sm text-[var(--color-muted)] mt-1">
-            Manage your citizen details, target categories, notification preferences, and storage settings.
+            {t.profileSubtitle || 'Manage your citizen details, target categories, notification preferences, and storage settings.'}
           </p>
         </div>
 
@@ -152,7 +155,7 @@ export const ProfilePage: React.FC = () => {
                   htmlFor="profile-name"
                   className="block text-xs font-bold uppercase tracking-wider text-[var(--color-text)] mb-1.5"
                 >
-                  Full Name <span className="text-rose-500">*</span>
+                  {t.fullName || 'Full Name'} <span className="text-rose-500">*</span>
                 </label>
                 <input
                   id="profile-name"
@@ -187,7 +190,7 @@ export const ProfilePage: React.FC = () => {
                   htmlFor="profile-state"
                   className="block text-xs font-bold uppercase tracking-wider text-[var(--color-text)] mb-1.5"
                 >
-                  State / Union Territory
+                  {t.state || 'State / Union Territory'}
                 </label>
                 <select
                   id="profile-state"
@@ -208,18 +211,23 @@ export const ProfilePage: React.FC = () => {
                   htmlFor="profile-language"
                   className="block text-xs font-bold uppercase tracking-wider text-[var(--color-text)] mb-1.5"
                 >
-                  Preferred Language
+                  {t.preferredLanguage || 'Preferred Language'}
                 </label>
                 <select
                   id="profile-language"
                   value={language}
-                  onChange={(e) => setLanguage(e.target.value as SupportedLanguage)}
+                  onChange={(e) => {
+                    const nextLang = e.target.value as SupportedLanguage;
+                    setLanguage(nextLang);
+                    setGlobalLanguage(nextLang);
+                  }}
                   className="w-full p-3.5 text-sm rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] text-[var(--color-text)] focus:ring-2 focus:ring-[var(--color-primary)] focus:outline-hidden cursor-pointer"
                 >
-                  <option value="English">English</option>
-                  <option value="Hindi">हिन्दी</option>
-                  <option value="Kannada">ಕನ್ನಡ</option>
-                  <option value="Tamil">தமிழ்</option>
+                  {LANGUAGE_OPTIONS.map((opt) => (
+                    <option key={opt.code} value={opt.code}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>

@@ -44,6 +44,7 @@ export interface TranslationStrings {
   signIn: string;
   language: string;
   home: string;
+  back: string;
   cancel: string;
   delete: string;
   rename: string;
@@ -204,6 +205,7 @@ const ENGLISH_STRINGS: TranslationStrings = {
   signIn: 'Sign in',
   language: 'Language',
   home: 'Home',
+  back: 'Back',
   cancel: 'Cancel',
   delete: 'Delete',
   rename: 'Rename',
@@ -354,6 +356,7 @@ const KANNADA_STRINGS: TranslationStrings = {
   signIn: 'ಸೈನ್ ಇನ್',
   language: 'ಭಾಷೆ',
   home: 'ಮುಖಪುಟ',
+  back: 'ಹಿಂದೆ',
   cancel: 'ರದ್ದುಮಾಡಿ',
   delete: 'ಅಳಿಸಿ',
   rename: 'ಮರುಹೆಸರಿಸಿ',
@@ -504,6 +507,7 @@ const HINDI_STRINGS: TranslationStrings = {
   signIn: 'साइन इन',
   language: 'भाषा',
   home: 'होम',
+  back: 'पीछे',
   cancel: 'रद्द करें',
   delete: 'हटाएं',
   rename: 'नाम बदलें',
@@ -634,7 +638,15 @@ const HINDI_STRINGS: TranslationStrings = {
   submitFeedback: 'प्रतिक्रिया सबमिट करें',
 };
 
-const TAMIL_STRINGS: TranslationStrings = {
+// Generates sensible fallback to English strings for any untranslated key
+function createLanguageStrings(
+  overrides: Partial<TranslationStrings>,
+  fallback = ENGLISH_STRINGS
+): TranslationStrings {
+  return { ...fallback, ...overrides };
+}
+
+const TAMIL_STRINGS: TranslationStrings = createLanguageStrings({
   appName: 'ஸ்கீம் சாதி',
   tagline: 'நீங்கள் தகுதிபெறும் அரசுத் திட்டங்களைக் கண்டறியுங்கள்',
   greeting: 'வணக்கம்! நான் ஸ்கீம் சாதி. அரசுத் திட்டங்கள், உங்கள் தகுதி அல்லது தேவையான ஆவணங்கள் பற்றி கேளுங்கள்.',
@@ -654,6 +666,7 @@ const TAMIL_STRINGS: TranslationStrings = {
   signIn: 'உள்நுழைக',
   language: 'மொழி',
   home: 'முகப்பு',
+  back: 'பின்செல்',
   cancel: 'ரத்துசெய்',
   delete: 'நீக்கு',
   rename: 'மறுபெயரிடு',
@@ -759,9 +772,9 @@ const TAMIL_STRINGS: TranslationStrings = {
   otherReason: 'மற்றவை',
   commentsOptional: 'கூடுதல் கருத்துகள் (விருப்பம்)',
   submitFeedback: 'கருத்தைச் சமர்ப்பிக்கவும்',
-};
+});
 
-const TELUGU_STRINGS: TranslationStrings = {
+const TELUGU_STRINGS: TranslationStrings = createLanguageStrings({
   appName: 'స్కీమ్ సాథీ',
   tagline: 'మీరు అర్హత సాధించే ప్రభుత్వ పథకాలను కనుగొనండి',
   greeting: 'నమస్కారం! నేను స్కీమ్ సాథీ. ప్రభుత్వ పథకాలు, మీ అర్హత మరియు అవసరమైన పత్రాల గురించి అడగండి.',
@@ -780,6 +793,7 @@ const TELUGU_STRINGS: TranslationStrings = {
   signIn: 'సైన్ ఇన్',
   language: 'భాష',
   home: 'హోమ్',
+  back: 'వెనుకకు',
   cancel: 'రద్దు చేయి',
   delete: 'తొలగించు',
   rename: 'పేరు మార్చు',
@@ -877,15 +891,7 @@ const TELUGU_STRINGS: TranslationStrings = {
   otherReason: 'ఇతర',
   commentsOptional: 'అదనపు వ్యాఖ్యలు (ఐచ్ఛికం)',
   submitFeedback: 'ఫీడ్‌బ్యాక్ సమర్పించండి',
-};
-
-// Generates sensible fallback to English strings for any untranslated key
-function createLanguageStrings(
-  overrides: Partial<TranslationStrings>,
-  fallback = ENGLISH_STRINGS
-): TranslationStrings {
-  return { ...fallback, ...overrides };
-}
+});
 
 // Full 12 languages dictionary
 export const TRANSLATIONS: Record<SupportedLanguage, TranslationStrings> = {

@@ -324,15 +324,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return updated;
     });
     setCurrentChatId((prev) => (prev === chatId ? null : prev));
-    showToast('Chat deleted', 'info');
-  }, [showToast]);
+    showToast(TRANSLATIONS[language]?.chatDeleted || 'Chat deleted', 'info');
+  }, [showToast, language]);
 
   const deleteAllChats = useCallback(() => {
     setChats([]);
     setCurrentChatId(null);
     Storage.setChats([]);
-    showToast('All chats deleted', 'info');
-  }, [showToast]);
+    showToast(TRANSLATIONS[language]?.allChatsDeleted || 'All chats deleted', 'info');
+  }, [showToast, language]);
 
   const appendMessage = useCallback((chatId: string, message: ChatMessage) => {
     setChats((prev) => {

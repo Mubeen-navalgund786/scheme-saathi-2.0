@@ -63,6 +63,13 @@ export interface TranslationStrings {
   voiceComingSoon: string;
   wasThisHelpful: string;
   thanksFeedback: string;
+  helpful: string;
+  notHelpful: string;
+  chatDeleted: string;
+  allChatsDeleted: string;
+  feedbackSaved: string;
+  options: string;
+  saveTitle: string;
   suggestionFarmer: string;
   suggestionEligibility: string;
   suggestionDocs: string;
@@ -183,6 +190,9 @@ export interface TranslationStrings {
   otherReason: string;
   commentsOptional: string;
   submitFeedback: string;
+  reason: string;
+  feedbackPlaceholder: string;
+  close: string;
 }
 
 const ENGLISH_STRINGS: TranslationStrings = {
@@ -221,8 +231,16 @@ const ENGLISH_STRINGS: TranslationStrings = {
   sendMessage: 'Send message',
   stopStreaming: 'Stop',
   voiceComingSoon: 'Voice input is coming soon',
+  voiceInput: 'Voice input',
   wasThisHelpful: 'Was this helpful?',
   thanksFeedback: 'Thanks for your feedback',
+  helpful: 'Helpful',
+  notHelpful: 'Not helpful',
+  chatDeleted: 'Chat deleted',
+  allChatsDeleted: 'All chats deleted',
+  feedbackSaved: 'Feedback saved. Thank you!',
+  options: 'Options',
+  saveTitle: 'Save title',
   suggestionFarmer: 'Schemes for farmers',
   suggestionEligibility: 'Check my eligibility',
   suggestionDocs: 'Documents needed',
@@ -334,6 +352,9 @@ const ENGLISH_STRINGS: TranslationStrings = {
   otherReason: 'Other',
   commentsOptional: 'Additional comments (optional)',
   submitFeedback: 'Submit feedback',
+  reason: 'Reason',
+  feedbackPlaceholder: 'What could be made clearer or what was missing?',
+  close: 'Close dialog',
 };
 
 const KANNADA_STRINGS: TranslationStrings = {
@@ -374,6 +395,13 @@ const KANNADA_STRINGS: TranslationStrings = {
   voiceComingSoon: 'ಧ್ವನಿ ಇನ್‌ಪುಟ್ ಶೀಘ್ರದಲ್ಲೇ ಬರಲಿದೆ',
   wasThisHelpful: 'ಇದು ಸಹಾಯಕವಾಗಿದೆಯೇ?',
   thanksFeedback: 'ನಿಮ್ಮ ಪ್ರತಿಕ್ರಿಯೆಗೆ ಧನ್ಯವಾದಗಳು',
+  helpful: 'ಸಹಾಯಕ',
+  notHelpful: 'ಸಹಾಯಕವಲ್ಲ',
+  chatDeleted: 'ಚಾಟ್ ಅಳಿಸಲಾಗಿದೆ',
+  allChatsDeleted: 'ಎಲ್ಲಾ ಚಾಟ್‌ಗಳನ್ನು ಅಳಿಸಲಾಗಿದೆ',
+  feedbackSaved: 'ಪ್ರತಿಕ್ರಿಯೆಯನ್ನು ಉಳಿಸಲಾಗಿದೆ. ಧನ್ಯವಾದಗಳು!',
+  options: 'ಆಯ್ಕೆಗಳು',
+  saveTitle: 'ಶೀರ್ಷಿಕೆ ಉಳಿಸಿ',
   suggestionFarmer: 'ರೈತರಿಗಾಗಿ ಯೋಜನೆಗಳು',
   suggestionEligibility: 'ನನ್ನ ಅರ್ಹತೆ ಪರಿಶೀಲಿಸಿ',
   suggestionDocs: 'ಬೇಕಾದ ದಾಖಲೆಗಳು',
@@ -525,6 +553,13 @@ const HINDI_STRINGS: TranslationStrings = {
   voiceComingSoon: 'वॉइस इनपुट जल्द आ रहा है',
   wasThisHelpful: 'क्या यह मददगार था?',
   thanksFeedback: 'आपकी प्रतिक्रिया के लिए धन्यवाद',
+  helpful: 'मददगार',
+  notHelpful: 'मददगार नहीं',
+  chatDeleted: 'चैट हटाई गई',
+  allChatsDeleted: 'सभी चैट हटा दी गईं',
+  feedbackSaved: 'प्रतिक्रिया सहेजी गई। धन्यवाद!',
+  options: 'विकल्प',
+  saveTitle: 'शीर्षक सहेजें',
   suggestionFarmer: 'किसानों के लिए योजनाएं',
   suggestionEligibility: 'मेरी पात्रता जांचें',
   suggestionDocs: 'आवश्यक दस्तावेज',
@@ -979,21 +1014,86 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationStrings> = {
 
   Punjabi: createLanguageStrings({
     appName: 'ਸਕੀਮ ਸਾਥੀ',
-    tagline: 'ਸਰਕਾਰੀ ਸਕੀਮਾਂ ਲੱਭੋ ਜਿਨ੍ਹਾਂ ਦੇ ਤੁਸੀਂ ਯੋਗ ਹੋ',
-    greeting: 'ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ! ਮੈਂ ਸਕੀਮ ਸਾਥੀ ਹਾਂ। ਸਰਕਾਰੀ ਸਕੀਮਾਂ ਅਤੇ ਯੋਗਤਾ ਬਾਰੇ ਪੁੱਛੋ।',
-    shortDisclaimer: 'ਸਿਰਫ ਜਾਣਕਾਰੀ ਲਈ। ਹਮੇਸ਼ਾ ਅਧਿਕਾਰਤ ਪੋਰਟਲ ਤੇ ਅਪਲਾਈ ਕਰੋ।',
+    tagline: 'ਉਹ ਸਰਕਾਰੀ ਸਕੀਮਾਂ ਲੱਭੋ ਜਿਨ੍ਹਾਂ ਦੇ ਤੁਸੀਂ ਯੋਗ ਹੋ',
+    greeting: 'ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ! ਮੈਂ ਸਕੀਮ ਸਾਥੀ ਹਾਂ। ਭਾਰਤੀ ਸਰਕਾਰੀ ਸਕੀਮਾਂ, ਆਪਣੀ ਯੋਗਤਾ ਜਾਂ ਲੋੜੀਂਦੇ ਦਸਤਾਵੇਜ਼ਾਂ ਬਾਰੇ ਪੁੱਛੋ।',
+    disclaimer: 'ਸਕੀਮ ਸਾਥੀ ਇੱਕ ਜਾਣਕਾਰੀ ਭਰਪੂਰ ਸੇਵਾ ਹੈ। ਇਹ ਸਰਕਾਰੀ ਵੈੱਬਸਾਈਟ ਨਹੀਂ ਹੈ। ਹਮੇਸ਼ਾ ਅਧਿਕਾਰਤ ਸਰਕਾਰੀ ਪੋਰਟਲ ਤੇ ਅਪਲਾਈ ਕਰੋ।',
+    shortDisclaimer: 'ਸਿਰਫ ਜਾਣਕਾਰੀ ਲਈ। ਹਮੇਸ਼ਾ ਅਧਿਕਾਰਤ ਸਰਕਾਰੀ ਪੋਰਟਲ ਤੇ ਅਪਲਾਈ ਕਰੋ।',
+
     newChat: 'ਨਵੀਂ ਚੈਟ',
+    searchChats: 'ਚੈਟ ਖੋਜੋ...',
     savedSchemes: 'ਸੰਭਾਲੀਆਂ ਸਕੀਮਾਂ',
     schemesLibrary: 'ਸਕੀਮ ਲਾਇਬ੍ਰੇਰੀ',
-    checkEligibility: 'ਯੋਗਤਾ ਜਾਂਚੋ',
+    notifications: 'ਸੂਚਨਾਵਾਂ',
+    checkEligibility: 'ਯੋਗਤਾ ਜਾਂਚ',
+    recent: 'ਹਾਲੀਆ',
+    helpAndGrievance: 'ਮਦਦ ਅਤੇ ਸ਼ਿਕਾਇਤ',
+    profile: 'ਪ੍ਰੋਫਾਈਲ',
+    signOut: 'ਸਾਈਨ ਆਉਟ',
+    signIn: 'ਸਾਈਨ ਇਨ',
+    language: 'ਭਾਸ਼ਾ',
+    home: 'ਮੁੱਖ ਪੰਨਾ',
+    back: 'ਪਿੱਛੇ',
+    cancel: 'ਰੱਦ ਕਰੋ',
+    delete: 'ਮਿਟਾਓ',
+    rename: 'ਨਾਂ ਬਦਲੋ',
+    save: 'ਸੰਭਾਲੋ',
+    deleteChatTitle: 'ਕੀ ਚੈਟ ਮਿਟਾਉਣੀ ਹੈ?',
+    deleteChatConfirm: 'ਕੀ ਤੁਸੀਂ ਵਾਕਈ ਇਸ ਚੈਟ ਨੂੰ ਮਿਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ? ਇਹ ਕਾਰਵਾਈ ਵਾਪਸ ਨਹੀਂ ਲਈ ਜਾ ਸਕਦੀ।',
+    noRecentChats: 'ਅਜੇ ਕੋਈ ਹਾਲੀਆ ਚੈਟ ਨਹੀਂ',
+    noChatsMatch: 'ਕੋਈ ਚੈਟ ਮੇਲ ਨਹੀਂ ਖਾਂਦੀ',
+
     howCanHelp: 'ਸਕੀਮ ਸਾਥੀ ਅੱਜ ਤੁਹਾਡੀ ਕੀ ਮਦਦ ਕਰ ਸਕਦਾ ਹੈ?',
-    askPlaceholder: 'ਕਿਸੇ ਸਕੀਮ ਬਾਰੇ ਪੁੱਛੋ...',
+    chatSubheading: 'ਸਰਕਾਰੀ ਸਕੀਮਾਂ ਲੱਭੋ, ਆਪਣੀ ਯੋਗਤਾ ਦੀ ਜਾਂਚ ਕਰੋ ਅਤੇ ਲੋੜੀਂਦੀ ਸਹਾਇਤਾ ਪ੍ਰਾਪਤ ਕਰੋ।',
+    askPlaceholder: 'ਕਿਸੇ ਸਕੀਮ ਜਾਂ ਸੇਵਾ ਬਾਰੇ ਪੁੱਛੋ...',
+    sendMessage: 'ਸੁਨੇਹਾ ਭੇਜੋ',
+    stopStreaming: 'ਰੋਕੋ',
+    voiceComingSoon: 'ਵੌਇਸ ਇਨਪੁਟ ਜਲਦ ਆ ਰਿਹਾ ਹੈ',
+    wasThisHelpful: 'ਕੀ ਇਹ ਮਦਦਗਾਰ ਸੀ?',
+    thanksFeedback: 'ਤੁਹਾਡੇ ਫੀਡਬੈਕ ਲਈ ਧੰਨਵਾਦ',
+    helpful: 'ਮਦਦਗਾਰ',
+    notHelpful: 'ਮਦਦਗਾਰ ਨਹੀਂ',
+    chatDeleted: 'ਚੈਟ ਮਿਟਾ ਦਿੱਤੀ ਗਈ',
+    allChatsDeleted: 'ਸਾਰੀਆਂ ਚੈਟਾਂ ਮਿਟਾ ਦਿੱਤੀਆਂ ਗਈਆਂ',
+    feedbackSaved: 'ਫੀਡਬੈਕ ਸੰਭਾਲਿਆ ਗਿਆ। ਧੰਨਵਾਦ!',
+    options: 'ਵਿਕਲਪ',
+    saveTitle: 'ਸਿਰਲੇਖ ਸੰਭਾਲੋ',
+
+    suggestionFarmer: 'ਕਿਸਾਨਾਂ ਲਈ ਸਕੀਮਾਂ',
+    suggestionEligibility: 'ਮੇਰੀ ਯੋਗਤਾ ਜਾਂਚੋ',
+    suggestionDocs: 'ਲੋੜੀਂਦੇ ਦਸਤਾਵੇਜ਼',
+    suggestionStudent: 'ਵਿਦਿਆਰਥੀਆਂ ਲਈ ਵਜ਼ੀਫ਼ੇ',
+    suggestionWomen: 'ਮਹਿਲਾ ਉੱਦਮੀਆਂ ਲਈ ਸਕੀਮਾਂ',
+    suggestionHealth: 'ਸਿਹਤ ਸਕੀਮਾਂ',
+    startEligibilityCheck: 'ਯੋਗਤਾ ਜਾਂਚ ਸ਼ੁਰੂ ਕਰੋ',
+    browseSchemeLibrary: 'ਸਕੀਮ ਲਾਇਬ੍ਰੇਰੀ ਵੇਖੋ',
+    takeFullEligibility: 'ਪੂਰੀ ਯੋਗਤਾ ਜਾਂਚ ਕਰੋ',
+
     benefit: 'ਲਾਭ',
     eligibility: 'ਯੋਗਤਾ',
-    documents: 'ਦਸਤਾਵੇਜ਼',
+    documents: 'ਲੋੜੀਂਦੇ ਦਸਤਾਵੇਜ਼',
+    source: 'ਸਰੋਤ',
+    updated: 'ਅਪਡੇਟ ਕੀਤਾ',
     applyOfficialWebsite: 'ਅਧਿਕਾਰਤ ਵੈੱਬਸਾਈਟ ਤੇ ਅਪਲਾਈ ਕਰੋ',
     likelyEligible: 'ਯੋਗ ਹੋਣ ਦੀ ਸੰਭਾਵਨਾ ਹੈ',
-    suggestionFarmer: 'ਕਿਸਾਨਾਂ ਲਈ ਸਕੀਮਾਂ',
+    checkEligibilityStatus: 'ਯੋਗਤਾ ਜਾਂਚੋ',
+    notEligible: 'ਯੋਗ ਨਹੀਂ',
+    eligibilityUnknown: 'ਯੋਗਤਾ ਅਣਜਾਣ',
+    centralScheme: 'ਕੇਂਦਰੀ ਸਕੀਮ',
+    stateScheme: 'ਰਾਜ ਸਕੀਮ',
+    viewDetails: 'ਵੇਰਵੇ ਵੇਖੋ',
+    saveScheme: 'ਸਕੀਮ ਸੰਭਾਲੋ',
+    removeSaved: 'ਸੰਭਾਲੀ ਸੂਚੀ ਵਿੱਚੋਂ ਹਟਾਓ',
+    resetFilters: 'ਫਿਲਟਰ ਰੀਸੈੱਟ ਕਰੋ',
+    noSchemesFoundDesc: 'ਕੋਈ ਸਕੀਮ ਨਹੀਂ ਮਿਲੀ',
+
+    feedbackTitle: 'ਇਸ ਜਵਾਬ ਨੂੰ ਬਿਹਤਰ ਬਣਾਉਣ ਵਿੱਚ ਮਦਦ ਕਰੋ',
+    whatWasWrong: 'ਇਸ ਜਵਾਬ ਵਿੱਚ ਕੀ ਕਮੀ ਸੀ?',
+    wrongScheme: 'ਗਲਤ ਸਕੀਮ',
+    outdatedInfo: 'ਪੁਰਾਣੀ ਜਾਣਕਾਰੀ',
+    unclear: 'ਅਸਪਸ਼ਟ',
+    otherReason: 'ਹੋਰ ਕਾਰਨ',
+    commentsOptional: 'ਵਾਧੂ ਟਿੱਪਣੀਆਂ (ਵਿਕਲਪਿਕ)',
+    submitFeedback: 'ਫੀਡਬੈਕ ਭੇਜੋ',
   }),
 
   Odia: createLanguageStrings({

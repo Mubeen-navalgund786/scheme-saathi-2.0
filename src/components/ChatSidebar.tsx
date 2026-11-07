@@ -309,7 +309,7 @@ export const ChatSidebar: React.FC<Props> = ({ isOpen, onClose }) => {
                             type="button"
                             onClick={() => handleSaveRename(chat.id)}
                             className="p-1 text-[var(--color-primary)] hover:bg-[var(--color-surface)] rounded-sm"
-                            aria-label="Save title"
+                            aria-label={t.saveTitle || 'Save title'}
                           >
                             ✓
                           </button>
@@ -323,7 +323,7 @@ export const ChatSidebar: React.FC<Props> = ({ isOpen, onClose }) => {
                           >
                             <MessageSquare className="w-3.5 h-3.5 shrink-0 opacity-70" />
                             <span className="truncate">
-                              {(!chat.title || chat.title.toLowerCase() === 'new chat' || chat.title === 'ಹೊಸ ಚಾಟ್' || chat.title === 'नई चैट')
+                              {(!chat.title || chat.title.toLowerCase() === 'new chat' || chat.title === 'ಹೊಸ ಚಾಟ್' || chat.title === 'नई चैट' || chat.title === 'ਨਵੀਂ ਚੈਟ')
                                 ? t.newChat
                                 : chat.title}
                             </span>
@@ -338,7 +338,7 @@ export const ChatSidebar: React.FC<Props> = ({ isOpen, onClose }) => {
                                 setActiveMenuChatId(isMenuOpen ? null : chat.id);
                               }}
                               className="p-1 rounded-md text-[var(--color-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)] opacity-80 group-hover:opacity-100"
-                              aria-label={`Options for chat: ${chat.title}`}
+                              aria-label={`${t.options || 'Options'}: ${chat.title}`}
                             >
                               <MoreVertical className="w-3.5 h-3.5" />
                             </button>

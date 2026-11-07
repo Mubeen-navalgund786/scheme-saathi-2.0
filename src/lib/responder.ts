@@ -1,5 +1,6 @@
 import { Scheme, UserProfile, ChatMessage, SupportedLanguage } from '../types';
 import { MOCK_SCHEMES } from '../data/schemes';
+import { getLocalizedScheme, getLocalizedCategory } from './schemeTranslations';
 
 export interface BotResponseResult {
   text: string;
@@ -39,7 +40,53 @@ export function findSchemeInText(query: string, schemes: Scheme[] = MOCK_SCHEMES
     }
   }
 
-  // 2. Exact or word-boundary matches on aliases
+  // 2. Punjabi / Regional aliases direct detection
+  if (norm.includes('ਕਿਸਾਨ') || norm.includes('ਕਿਸਾਨ ਸਨਮਾਨ') || norm.includes('ਪੀਐਮ ਕਿਸਾਨ') || norm.includes('ਪੀਐੱਮ ਕਿਸਾਨ')) {
+    const s = schemes.find((sc) => sc.id === 'pm-kisan');
+    if (s) return s;
+  }
+  if (norm.includes('ਫਸਲ ਬੀਮਾ')) {
+    const s = schemes.find((sc) => sc.id === 'pmfby');
+    if (s) return s;
+  }
+  if (norm.includes('ਕਿਸਾਨ ਕ੍ਰੈਡਿਟ') || norm.includes('ਕੇਸੀਸੀ')) {
+    const s = schemes.find((sc) => sc.id === 'kcc');
+    if (s) return s;
+  }
+  if (norm.includes('ਕਿਸਾਨ ਮਾਨ ਧਨ') || norm.includes('ਕਿਸਾਨ ਪੈਨਸ਼ਨ')) {
+    const s = schemes.find((sc) => sc.id === 'pm-kmy');
+    if (s) return s;
+  }
+  if (norm.includes('ਆਯੁਸ਼ਮਾਨ') || norm.includes('ਸਿਹਤ ਕਾਰਡ')) {
+    const s = schemes.find((sc) => sc.id === 'ayushman-bharat');
+    if (s) return s;
+  }
+  if (norm.includes('ਆਵਾਸ') || norm.includes('ਮਕਾਨ ਯੋਜਨਾ')) {
+    const s = schemes.find((sc) => sc.id === 'pm-awas');
+    if (s) return s;
+  }
+  if (norm.includes('ਵਜ਼ੀਫ਼ਾ') || norm.includes('ਸਕਾਲਰਸ਼ਿਪ') || norm.includes('ਵਿਦਿਆਰਥੀ ਵਜ਼ੀਫ਼ਾ')) {
+    const s = schemes.find((sc) => sc.id === 'national-scholarship');
+    if (s) return s;
+  }
+  if (norm.includes('ਮੁਦਰਾ') || norm.includes('ਮੁਦਰਾ ਲੋਨ')) {
+    const s = schemes.find((sc) => sc.id === 'pm-mudra');
+    if (s) return s;
+  }
+  if (norm.includes('ਅਟਲ ਪੈਨਸ਼ਨ') || norm.includes('ਏਪੀਵਾਈ')) {
+    const s = schemes.find((sc) => sc.id === 'atal-pension');
+    if (s) return s;
+  }
+  if (norm.includes('ਸਵਨਿਧੀ') || norm.includes('ਰੇਹੜੀ ਫੜ੍ਹੀ')) {
+    const s = schemes.find((sc) => sc.id === 'pm-svanidhi');
+    if (s) return s;
+  }
+  if (norm.includes('ਸੁਕੰਨਿਆ') || norm.includes('ਬੇਟੀ ਬਚਾਓ')) {
+    const s = schemes.find((sc) => sc.id === 'sukanya-samriddhi');
+    if (s) return s;
+  }
+
+  // 3. Exact or word-boundary matches on aliases
   const scoredSchemes: Array<{ scheme: Scheme; score: number }> = [];
 
   for (const s of schemes) {
@@ -161,6 +208,9 @@ function detectCategoryInQuery(query: string): string | null {
     norm.includes('ಬೆಳೆ') ||
     norm.includes('किसान') ||
     norm.includes('खेती') ||
+    norm.includes('ਕਿਸਾਨ') ||
+    norm.includes('ਖੇਤੀ') ||
+    norm.includes('ਫਸਲ') ||
     norm.includes('विவசாயி') ||
     norm.includes('రైతు')
   ) {
@@ -179,6 +229,11 @@ function detectCategoryInQuery(query: string): string | null {
     norm.includes('ವಿದ್ಯಾರ್ಥಿವೇತನ') ||
     norm.includes('छात्र') ||
     norm.includes('छात्रवृत्ति') ||
+    norm.includes('ਵਿਦਿਆਰਥੀ') ||
+    norm.includes('ਵਜ਼ੀਫ਼ਾ') ||
+    norm.includes('ਪੜ੍ਹਾਈ') ||
+    norm.includes('ਸਕੂਲ') ||
+    norm.includes('ਕਾਲਜ') ||
     norm.includes('மாணவர்') ||
     norm.includes('విద్యార్థి')
   ) {
@@ -196,6 +251,11 @@ function detectCategoryInQuery(query: string): string | null {
     norm.includes('ಹೆಣ್ಣು') ||
     norm.includes('महिला') ||
     norm.includes('बेटी') ||
+    norm.includes('ਮਹਿਲਾ') ||
+    norm.includes('ਔਰਤ') ||
+    norm.includes('ਕੁੜੀ') ||
+    norm.includes('ਧੀ') ||
+    norm.includes('ਬੇਟੀ') ||
     norm.includes('பெண்') ||
     norm.includes('మహిళ')
   ) {
@@ -216,6 +276,11 @@ function detectCategoryInQuery(query: string): string | null {
     norm.includes('व्यापार') ||
     norm.includes('व्यवसाय') ||
     norm.includes('लोन') ||
+    norm.includes('ਕਾਰੋਬਾਰ') ||
+    norm.includes('ਵਪਾਰ') ||
+    norm.includes('ਕਰਜ਼ਾ') ||
+    norm.includes('ਲੋਨ') ||
+    norm.includes('ਦੁਕਾਨ') ||
     norm.includes('வணிகம்') ||
     norm.includes('వ్యాపారం')
   ) {
@@ -234,6 +299,9 @@ function detectCategoryInQuery(query: string): string | null {
     norm.includes('ಚಿಕಿತ್ಸೆ') ||
     norm.includes('स्वास्थ्य') ||
     norm.includes('अस्पताल') ||
+    norm.includes('ਸਿਹਤ') ||
+    norm.includes('ਹਸਪਤਾਲ') ||
+    norm.includes('ਇਲਾਜ') ||
     norm.includes('மருத்துவம்') ||
     norm.includes('ఆరోగ్య')
   ) {
@@ -252,6 +320,9 @@ function detectCategoryInQuery(query: string): string | null {
     norm.includes('ಆವಾಸ್') ||
     norm.includes('मकान') ||
     norm.includes('आवास') ||
+    norm.includes('ਘਰ') ||
+    norm.includes('ਮਕਾਨ') ||
+    norm.includes('ਆਵਾਸ') ||
     norm.includes('வீடு') ||
     norm.includes('ఇల్లు')
   ) {
@@ -270,6 +341,9 @@ function detectCategoryInQuery(query: string): string | null {
     norm.includes('ಪೆನ್ಷನ್') ||
     norm.includes('वरिष्ठ') ||
     norm.includes('पेंशन') ||
+    norm.includes('ਬਜ਼ੁਰਗ') ||
+    norm.includes('ਪੈਨਸ਼ਨ') ||
+    norm.includes('ਓਲਡ ਏਜ') ||
     norm.includes('ஓய்வூதியம்') ||
     norm.includes('పింఛను')
   ) {
@@ -295,8 +369,8 @@ export function generateLocalReply(
   // 1. SAFETY FILTER (Always checked first)
   // =========================================================================
   const hasAadhaar =
-    norm.includes('aadhaar') || norm.includes('aadhar') || norm.includes('ಆಧಾರ್') || norm.includes('आधार') || norm.includes('ஆதார்') || norm.includes('ఆధార్');
-  const hasOtp = /\botp\b/i.test(raw) || norm.includes('ಒಟಿಪಿ') || norm.includes('ओटीपी') || norm.includes('ஓடிபி') || norm.includes('ఓటీపీ');
+    norm.includes('aadhaar') || norm.includes('aadhar') || norm.includes('ಆಧಾರ್') || norm.includes('आधार') || norm.includes('ਆਧਾਰ') || norm.includes('ஆதார்') || norm.includes('ఆధార్');
+  const hasOtp = /\botp\b/i.test(raw) || norm.includes('ಒಟಿಪಿ') || norm.includes('ओटीपी') || norm.includes('ਓਟੀਪੀ') || norm.includes('ஓடிபி') || norm.includes('ఓటీపీ');
   const hasBankAccount =
     norm.includes('bank account') ||
     norm.includes('account number') ||
@@ -306,6 +380,9 @@ export function generateLocalReply(
     norm.includes('ಖಾತೆ ಸಂಖ್ಯೆ') ||
     norm.includes('ಖಾತೆ ನಂಬರ್') ||
     norm.includes('खाता संख्या') ||
+    norm.includes('ਬੈਂਕ ਖਾਤਾ') ||
+    norm.includes('ਖਾਤਾ ਨੰਬਰ') ||
+    norm.includes('ਵੰਕੀ ਕਣਕ੍ਕੁ') ||
     norm.includes('வங்கி கணக்கு');
   const hasPassword =
     norm.includes('password') ||
@@ -313,6 +390,7 @@ export function generateLocalReply(
     norm.includes('cvv') ||
     norm.includes('ಪಾಸ್‌ವರ್ಡ್') ||
     norm.includes('पासवर्ड') ||
+    norm.includes('ਪਾਸਵਰਡ') ||
     norm.includes('கடவுச்சொல்');
 
   if (
@@ -320,10 +398,11 @@ export function generateLocalReply(
     norm.includes('my aadhaar') ||
     norm.includes('ಆಧಾರ್ ಸಂಖ್ಯೆ') ||
     norm.includes('आधार नंबर') ||
+    norm.includes('ਆਧਾਰ ਨੰਬਰ') ||
     hasOtp ||
     hasBankAccount ||
     hasPassword ||
-    (hasAadhaar && (norm.includes('number') || norm.includes('details') || norm.includes('card number') || norm.includes('ಸಂಖ್ಯೆ') || norm.includes('नंबर')))
+    (hasAadhaar && (norm.includes('number') || norm.includes('details') || norm.includes('card number') || norm.includes('ಸಂಖ್ಯೆ') || norm.includes('नंबर') || norm.includes('ਨੰਬਰ')))
   ) {
     return formatSafetyWarning(language);
   }
@@ -349,6 +428,10 @@ export function generateLocalReply(
       norm.includes('इस योजना') ||
       norm.includes('इसके') ||
       norm.includes('इसके लिए') ||
+      norm.includes('ਇਹ ਸਕੀਮ') ||
+      norm.includes('ਇਸ ਸਕੀਮ') ||
+      norm.includes('ਇਸਦੇ') ||
+      norm.includes('ਇਸ ਲਈ') ||
       norm.includes('இந்த திட்ட') ||
       norm.includes('దీనికి') ||
       norm.startsWith('who is eligible') ||
@@ -368,7 +451,14 @@ export function generateLocalReply(
       norm.includes('दस्तावेज क्या हैं') ||
       norm.includes('आवेदन कैसे करें') ||
       norm.includes('लिंक दें') ||
-      norm.includes('क्या मैं पात्र हूँ'));
+      norm.includes('क्या मैं पात्र हूँ') ||
+      norm.includes('ਕੌਣ ਯੋਗ ਹੈ') ||
+      norm.includes('ਲਾਭ ਕੀ ਹਨ') ||
+      norm.includes('ਕੀ ਲਾਭ ਹਨ') ||
+      norm.includes('ਕਿਹੜੇ ਦਸਤਾਵੇਜ਼') ||
+      norm.includes('ਅਰਜ਼ੀ ਕਿਵੇਂ ਦੇਣੀ ਹੈ') ||
+      norm.includes('ਲਿੰਕ ਦਿਓ') ||
+      norm.includes('ਕੀ ਮੈਂ ਯੋਗ ਹਾਂ'));
 
   const activeScheme: Scheme | null = directScheme || (isFollowUpPattern ? historyScheme : directScheme || historyScheme);
 
@@ -379,7 +469,7 @@ export function generateLocalReply(
   // A. Scheme Comparison Intent
   const isComparison =
     multipleSchemes.length >= 2 ||
-    ((norm.includes('compare') || norm.includes('difference between') || norm.includes('vs') || norm.includes('ಹೋಲಿಕೆ') || norm.includes('तुलना') || norm.includes('வித்தியாசம்')) &&
+    ((norm.includes('compare') || norm.includes('difference between') || norm.includes('vs') || norm.includes('ಹೋಲಿಕೆ') || norm.includes('तुलना') || norm.includes('ਤੁਲਨਾ') || norm.includes('ਵਿੱਚ ਅੰਤਰ') || norm.includes('ਅੰਤਰ') || norm.includes('வித்தியாசம்')) &&
       (multipleSchemes.length >= 1 || (activeScheme && multipleSchemes.length >= 1)));
 
   if (isComparison) {
@@ -404,6 +494,10 @@ export function generateLocalReply(
     norm.includes('आधिकारिक लिंक') ||
     norm.includes('वेबसाइट') ||
     norm.includes('पोर्टल') ||
+    norm.includes('ਲਿੰਕ') ||
+    norm.includes('ਵੈੱਬਸਾਈਟ') ||
+    norm.includes('ਪੋਰਟਲ') ||
+    norm.includes('ਅਧਿਕਾਰਤ ਲਿੰਕ') ||
     norm.includes('இணைப்பு') ||
     norm.includes('வலைத்தளம்') ||
     norm.includes('లింక్');
@@ -425,6 +519,10 @@ export function generateLocalReply(
     norm.includes('दस्तावेज') ||
     norm.includes('कागजात') ||
     norm.includes('प्रमाणपत्र') ||
+    norm.includes('ਦਸਤਾਵੇਜ਼') ||
+    norm.includes('ਕਾਗਜ਼ਾਤ') ||
+    norm.includes('ਸਰਟੀਫਿਕੇਟ') ||
+    norm.includes('ਪ੍ਰਮਾਣ ਪੱਤਰ') ||
     norm.includes('ஆவணம்') ||
     norm.includes('ஆவணங்கள்') ||
     norm.includes('పత్రాలు');
@@ -446,6 +544,10 @@ export function generateLocalReply(
     norm.includes('आवेदन कैसे करें') ||
     norm.includes('आवेदन प्रक्रिया') ||
     norm.includes('पंजीकरण कैसे करें') ||
+    norm.includes('ਅਰਜ਼ੀ ਕਿਵੇਂ ਦੇਣੀ ਹੈ') ||
+    norm.includes('ਅਰਜ਼ੀ ਪ੍ਰਕਿਰਿਆ') ||
+    norm.includes('ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਕਿਵੇਂ ਕਰੀਏ') ||
+    norm.includes('ਕਿਵੇਂ ਲਾਗੂ ਕਰੀਏ') ||
     norm.includes('விண்ணப்பிப்பது எப்படி') ||
     norm.includes('ఎలా దరఖాస్తు చేయాలి');
 
@@ -466,6 +568,10 @@ export function generateLocalReply(
     norm.includes('क्या मैं पात्र हूँ') ||
     norm.includes('क्या मुझे मिलेगा') ||
     norm.includes('मेरी पात्रता') ||
+    norm.includes('ਕੀ ਮੈਂ ਯੋਗ ਹਾਂ') ||
+    norm.includes('ਕੀ ਮੈਨੂੰ ਮਿਲੇਗਾ') ||
+    norm.includes('ਮੇਰੀ ਯੋਗਤਾ') ||
+    norm.includes('ਮੇਰੀ ਯੋਗਤਾ ਦੀ ਜਾਂਚ') ||
     norm.includes('நான் தகுதியுடையவனா') ||
     norm.includes('నేను అర్హుడినా');
 
@@ -485,6 +591,9 @@ export function generateLocalReply(
     norm.includes('अपात्र') ||
     norm.includes('कौन पात्र नहीं है') ||
     norm.includes('किसे लाभ नहीं मिलेगा') ||
+    norm.includes('ਕੌਣ ਯੋਗ ਨਹੀਂ ਹੈ') ||
+    norm.includes('ਅਯੋਗ') ||
+    norm.includes('ਕਿਸਨੂੰ ਲਾਭ ਨਹੀਂ ਮਿਲੇਗਾ') ||
     norm.includes('யார் தகுதியற்றவர்') ||
     norm.includes('ఎవరు అర్హులు కారు');
 
@@ -504,6 +613,10 @@ export function generateLocalReply(
     norm.includes('कौन पात्र है') ||
     norm.includes('पात्रता') ||
     norm.includes('योग्यता') ||
+    norm.includes('ਕੌਣ ਯੋਗ ਹੈ') ||
+    norm.includes('ਯੋਗਤਾ') ||
+    norm.includes('ਯੋਗਤਾ ਸ਼ਰਤਾਂ') ||
+    norm.includes('ਸ਼ਰਤਾਂ') ||
     norm.includes('யார் தகுதியானவர்') ||
     norm.includes('தகுதி') ||
     norm.includes('ఎవరు అర్హులు') ||
@@ -533,6 +646,13 @@ export function generateLocalReply(
     norm.includes('कितना पैसा') ||
     norm.includes('किस्त') ||
     norm.includes('राशि') ||
+    norm.includes('ਲਾਭ') ||
+    norm.includes('ਫਾਇਦੇ') ||
+    norm.includes('ਕਿੰਨੇ ਪੈਸੇ') ||
+    norm.includes('ਕਿਸ਼ਤ') ||
+    norm.includes('ਰਕਮ') ||
+    norm.includes('ਮਾਲੀ ਸਹਾਇਤਾ') ||
+    norm.includes('ਵਿੱਤੀ ਸਹਾਇਤਾ') ||
     norm.includes('நன்மை') ||
     norm.includes('எவ்வளவு பணம்') ||
     norm.includes('ప్రయోజనం') ||
@@ -555,6 +675,11 @@ export function generateLocalReply(
     norm.includes('अन्य योजना') ||
     norm.includes('और योजना') ||
     norm.includes('योजनाएं') ||
+    norm.includes('ਹੋਰ ਸਕੀਮ') ||
+    norm.includes('ਹੋਰ ਸਕੀਮਾਂ') ||
+    norm.includes('ਹੋਰ ਯੋਜਨਾਵਾਂ') ||
+    norm.includes('ਸਕੀਮਾਂ') ||
+    norm.includes('ਯੋਜਨਾਵਾਂ') ||
     norm.includes('மற்ற திட்டங்கள்') ||
     norm.includes('ఇతర పథకాలు');
 
@@ -577,6 +702,10 @@ export function generateLocalReply(
     norm.includes('बताइए') ||
     norm.includes('जानकारी दें') ||
     norm.includes('क्या है') ||
+    norm.includes('ਬਾਰੇ ਦੱਸੋ') ||
+    norm.includes('ਜਾਣਕਾਰੀ ਦਿਓ') ||
+    norm.includes('ਵੇਰਵੇ ਦਿਓ') ||
+    norm.includes('ਕੀ ਹੈ') ||
     norm.includes('பற்றி கூறு') ||
     norm.includes('గురించి చెప్పండి') ||
     (activeScheme && directScheme && norm.length < 50);
@@ -600,8 +729,12 @@ export function generateLocalReply(
     norm.includes('namaste') ||
     norm.includes('vanakkam') ||
     norm.includes('namaskara') ||
+    norm.includes('sat sri akaal') ||
+    norm.includes('sat shri akaal') ||
     norm.includes('ನಮಸ್ಕಾರ') ||
     norm.includes('नमस्ते') ||
+    norm.includes('ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ') ||
+    norm.includes('ਸਤਿ ਸ਼੍ਰੀ ਅਕਾਲ') ||
     norm.includes('வணக்கம்') ||
     norm.includes('నమస్కారం')
   ) {
@@ -613,7 +746,9 @@ export function generateLocalReply(
     norm.includes('check eligibility') ||
     norm.includes('eligibility tool') ||
     norm.includes('ಅರ್ಹತೆ ಪರಿಶೀಲಿಸಿ') ||
-    norm.includes('पात्रता जांचें')
+    norm.includes('पात्रता जांचें') ||
+    norm.includes('ਯੋਗਤਾ ਜਾਂਚੋ') ||
+    norm.includes('ਯੋਗਤਾ ਦੀ ਜਾਂਚ')
   ) {
     return formatEligibilityCheckShortcut(language);
   }
@@ -624,6 +759,9 @@ export function generateLocalReply(
     norm === 'all schemes' ||
     norm === 'ಯೋಜನೆಗಳು' ||
     norm === 'सभी योजनाएं' ||
+    norm === 'ਸਾਰੀਆਂ ਸਕੀਮਾਂ' ||
+    norm === 'ਸਕੀਮਾਂ' ||
+    norm === 'ਯੋਜਨਾਵਾਂ' ||
     norm === 'திட்டங்கள்'
   ) {
     return formatGenericExplore(language);
@@ -656,6 +794,14 @@ function formatSafetyWarning(language: SupportedLanguage): BotResponseResult {
       language,
     };
   }
+  if (language === 'Punjabi') {
+    return {
+      text: `### ਮਹੱਤਵਪੂਰਨ ਸੁਰੱਖਿਆ ਚੇਤਾਵਨੀ\n\nਕਿਰਪਾ ਕਰਕੇ ਚੈਟ ਵਿੱਚ ਆਪਣਾ ਆਧਾਰ ਨੰਬਰ, ਬੈਂਕ ਓਟੀਪੀ (OTP), ਖਾਤਾ ਵੇਰਵੇ ਜਾਂ ਪਾਸਵਰਡ **ਕਦੇ ਵੀ ਸਾਂਝਾ ਨਾ ਕਰੋ**।\n\nਸਕੀਮ ਸਾਥੀ ਇੱਕ ਸੂਚਨਾਤਮਕ ਪੋਰਟਲ ਹੈ ਅਤੇ ਇਹ **ਕਦੇ ਵੀ ਸੰਵੇਦਨਸ਼ੀਲ ਨਿੱਜੀ ਜਾਂ ਬੈਂਕਿੰਗ ਜਾਣਕਾਰੀ ਨਹੀਂ ਮੰਗਦਾ**। ਹਮੇਸ਼ਾ ਆਪਣੇ ਪਛਾਣ ਵੇਰਵਿਆਂ ਨੂੰ ਸੁਰੱਖਿਅਤ ਰੱਖੋ।`,
+      isSafetyWarning: true,
+      intent: 'SAFETY',
+      language,
+    };
+  }
   if (language === 'Tamil') {
     return {
       text: `### முக்கிய பாதுகாப்பு எச்சரிக்கை\n\nதயவுசெய்து உங்கள் ஆதார் எண், வங்கி ஓடிபி (OTP), கணக்கு விவரங்கள் அல்லது கடவுச்சொற்களை **பகிர வேண்டாம்**.\n\nஸ்கீம் சாதி ஒரு தகவல் வழங்கும் சேவையாகும், இது தனிப்பட்ட வங்கி சான்றுகளை ஒருபோதும் கேட்காது.`,
@@ -666,7 +812,7 @@ function formatSafetyWarning(language: SupportedLanguage): BotResponseResult {
   }
   if (language === 'Telugu') {
     return {
-      text: `### ముఖ్యమైన భద్రతా హెచ్చరిక\n\nదయచేసి మీ ఆధార్ నంబర్, బ్యాంక్ ఓటీపీ (OTP), ఖాతా వివరాలు లేదా పాస్‌వర్డ్‌లను చాట్‌లో **ఎప్పుడూ పంచుకోవద్దు**.\n\nస్కీమ్ సాథీ సురక్షితమైన సమాచార పోర్టల్ మరియు ఎప్పుడూ సున్నితమైన ఆధారాలను అడగదు.`,
+      text: `### ముఖ్యమైన భద్రతా హెచ్చరిక\n\nదయచేసి మీ ఆధార్ నంబర్, బ్యాంక్ ఓటీపీ (OTP), ఖాతా వివరాలు లేదా పాస్‌వర్డ్‌లను చాట్‌లో **ఎప్పుడੂ పంచుకోవద్దు**.\n\nస్కీమ్ సాథీ సురక్షితమైన సమాచార పోర్టల్ మరియు ఎప్పుడూ సున్నితమైన ఆధారాలను అడగదు.`,
       isSafetyWarning: true,
       intent: 'SAFETY',
       language,
@@ -808,6 +954,70 @@ function formatGeneralSchemeInfoResponse(scheme: Scheme, language: SupportedLang
     };
   }
 
+  if (language === 'Punjabi') {
+    const loc = getLocalizedScheme(scheme, 'Punjabi');
+    const isPmKisan = scheme.id === 'pm-kisan';
+    const lines = [
+      `### ${loc.name} (${loc.shortName || loc.name})`,
+      '',
+      `**ਸਕੀਮ ਦਾ ਵੇਰਵਾ**\n${isPmKisan ? 'ਭਾਰਤ ਸਰਕਾਰ ਦੀ 100% ਵਿੱਤ ਪੋਸ਼ਿਤ ਸਕੀਮ ਜੋ ਦੇਸ਼ ਦੇ ਸਾਰੇ ਭੂਮੀਧਾਰਕ ਕਿਸਾਨ ਪਰਿਵਾਰਾਂ ਨੂੰ ਸਿੱਧੀ ਆਮਦਨ ਸਹਾਇਤਾ ਪ੍ਰਦਾਨ ਕਰਦੀ ਹੈ।' : loc.summary || loc.benefit}`,
+      '',
+      `**ਮੁੱਖ ਉਦੇਸ਼**\n${isPmKisan ? 'ਖੇਤੀਬਾੜੀ ਇਨਪੁੱਟ ਖਰੀਦਣ ਅਤੇ ਘਰੇਲੂ ਲੋੜਾਂ ਨੂੰ ਪੂਰਾ ਕਰਨ ਲਈ ਕਿਸਾਨ ਪਰਿਵਾਰਾਂ ਨੂੰ ਪੂਰਕ ਆਮਦਨ ਸਹਾਇਤਾ ਪ੍ਰਦਾਨ ਕਰਨਾ।' : loc.purpose || 'ਯੋਗ ਨਾਗਰਿਕਾਂ ਨੂੰ ਵਿੱਤੀ ਅਤੇ ਸਮਾਜਿਕ ਸੁਰੱਖਿਆ ਪ੍ਰਦਾਨ ਕਰਨਾ।'}`,
+      '',
+      `**ਕਿਸਨੂੰ ਲਾਭ ਮਿਲੇਗਾ**\n${isPmKisan ? 'ਸਾਰੇ ਭੂਮੀਧਾਰਕ ਕਿਸਾਨ ਪਰਿਵਾਰ ਜਿਨ੍ਹਾਂ ਦੇ ਨਾਮ ਖੇਤੀ ਯੋਗ ਜ਼ਮੀਨ ਹੈ।' : loc.beneficiaries || loc.category}`,
+      '',
+      `**ਵਿੱਤੀ ਲਾਭ**\n${isPmKisan ? 'ਪ੍ਰਤੀ ਸਾਲ ₹6,000 ਦੀ ਵਿੱਤੀ ਸਹਾਇਤਾ ₹2,000 ਦੀਆਂ ਤਿੰਨ ਬਰਾਬਰ ਕਿਸ਼ਤਾਂ ਵਿੱਚ ਸਿੱਧੇ ਆਧਾਰ-ਲਿੰਕਡ ਬੈਂਕ ਖਾਤੇ ਵਿੱਚ ਡੀਬੀਟੀ (DBT) ਰਾਹੀਂ ਜਮ੍ਹਾਂ ਕੀਤੀ ਜਾਂਦੀ ਹੈ।' : loc.financialDetails || loc.benefit}`,
+      '',
+      `**ਸਕੀਮ ਕਿਵੇਂ ਕੰਮ ਕਰਦੀ ਹੈ**\n${isPmKisan ? 'ਰਾਜ ਸਰਕਾਰਾਂ ਜ਼ਮੀਨੀ ਰਿਕਾਰਡ ਦੇ ਆਧਾਰ ਤੇ ਯੋਗ ਕਿਸਾਨਾਂ ਦੀ ਪਛਾਣ ਕਰਦੀਆਂ ਹਨ। ਲਾਜ਼ਮੀ ਈ-ਕੇਵਾਈਸੀ (e-KYC) ਤੋਂ ਬਾਅਦ ਰਕਮ ਸਿੱਧੀ ਖਾਤੇ ਵਿੱਚ ਭੇਜੀ ਜਾਂਦੀ ਹੈ।' : loc.howItWorks || 'ਸਿੱਧੇ ਬੈਂਕ ਟ੍ਰਾਂਸਫਰ ਜਾਂ ਅਧਿਕਾਰਤ ਸੰਸਥਾਗਤ ਮਾਧਿਅਮ ਰਾਹੀਂ।'}`,
+      '',
+      `**ਯੋਗਤਾ ਸ਼ਰਤਾਂ**`,
+      ...(isPmKisan
+        ? [
+            '• ਪਰਿਵਾਰ ਦੇ ਨਾਮ ਤੇ ਵਾਹੀਯੋਗ ਖੇਤੀਬਾੜੀ ਜ਼ਮੀਨ ਦੀ ਮਲਕੀਅਤ ਹੋਣੀ ਚਾਹੀਦੀ ਹੈ।',
+            '• ਜ਼ਮੀਨੀ ਰਿਕਾਰਡ (ਜਮ੍ਹਾਂਬੰਦੀ/ਫ਼ਰਦ) ਰਾਜ ਦੇ ਭੂ-ਰਿਕਾਰਡ ਪੋਰਟਲ ਤੇ ਤਸਦੀਕਸ਼ੁਦਾ ਹੋਣਾ ਚਾਹੀਦਾ ਹੈ।',
+            '• ਬੈਂਕ ਖਾਤਾ ਆਧਾਰ ਨਾਲ ਲਿੰਕ ਅਤੇ ਡੀਬੀਟੀ (DBT) ਸਮਰੱਥ ਹੋਣਾ ਚਾਹੀਦਾ ਹੈ।',
+            '• ਪੀਐਮ-ਕਿਸਾਨ ਪੋਰਟਲ ਤੇ ਲਾਜ਼ਮੀ ਈ-ਕੇਵਾਈਸੀ (e-KYC) ਮੁਕੰਮਲ ਹੋਣੀ ਚਾਹੀਦੀ ਹੈ।',
+          ]
+        : (loc.eligibilityCriteria || [loc.eligibility]).map((c) => `• ${c}`)),
+      '',
+      `**ਲੋੜੀਂਦੇ ਦਸਤਾਵੇਜ਼**`,
+      ...(isPmKisan
+        ? [
+            '• ਆਧਾਰ ਕਾਰਡ (ਪਛਾਣ ਅਤੇ ਈ-ਕੇਵਾਈਸੀ ਲਈ ਲਾਜ਼ਮੀ)',
+            '• ਖੇਤੀਬਾੜੀ ਜ਼ਮੀਨ ਦੇ ਦਸਤਾਵੇਜ਼ (ਫ਼ਰਦ / ਜਮ੍ਹਾਂਬੰਦੀ ਨਕਲ)',
+            '• ਬੈਂਕ ਪਾਸਬੁੱਕ (ਆਧਾਰ ਲਿੰਕਡ ਅਤੇ ਡੀਬੀਟੀ ਸਮਰੱਥ ਖਾਤਾ)',
+            '• ਆਧਾਰ ਨਾਲ ਲਿੰਕਡ ਸਰਗਰਮ ਮੋਬਾਈਲ ਨੰਬਰ',
+          ]
+        : loc.documents.map((d) => `• ${d}`)),
+      '',
+      `**ਅਰਜ਼ੀ ਕਿਵੇਂ ਦੇਣੀ ਹੈ**`,
+      ...(isPmKisan
+        ? [
+            '1. ਅਧਿਕਾਰਤ ਪੋਰਟਲ https://pmkisan.gov.in ਤੇ ਜਾਓ।',
+            '2. "Farmers Corner" ਵਿੱਚ ਜਾ ਕੇ "New Farmer Registration" ਤੇ ਕਲਿੱਕ ਕਰੋ।',
+            '3. ਆਧਾਰ ਨੰਬਰ, ਰਾਜ ਅਤੇ ਮੋਬਾਈਲ ਨੰਬਰ ਦਰਜ ਕਰੋ।',
+            '4. ਆਧਾਰ ਓਟੀਪੀ (OTP) ਨਾਲ ਤਸਦੀਕ ਪੂਰੀ ਕਰੋ।',
+            '5. ਜ਼ਮੀਨ ਦੇ ਵੇਰਵੇ (ਖਸਰਾ ਨੰਬਰ, ਰਕਬਾ) ਭਰੋ ਅਤੇ ਦਸਤਾਵੇਜ਼ ਅੱਪਲੋਡ ਕਰੋ।',
+            '6. ਅਰਜ਼ੀ ਜਮ੍ਹਾਂ ਕਰੋ ਅਤੇ ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਨੰਬਰ ਸੁਰੱਖਿਅਤ ਰੱਖੋ।',
+            '',
+            '*ਔਫਲਾਈਨ ਸਹਾਇਤਾ:* ਕਿਸਾਨ ਨਜ਼ਦੀਕੀ ਕਾਮਨ ਸਰਵਿਸ ਸੈਂਟਰ (CSC) ਜਾਂ ਬਲਾਕ ਖੇਤੀਬਾੜੀ ਦਫ਼ਤਰ ਜਾ ਕੇ ਵੀ ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਕਰਵਾ ਸਕਦੇ ਹਨ।',
+          ]
+        : (loc.applicationSteps || ['ਅਧਿਕਾਰਤ ਪੋਰਟਲ ਤੇ ਅਰਜ਼ੀ ਦਿਓ।'])),
+      '',
+      `**ਅਧਿਕਾਰਤ ਵੈੱਬਸਾਈਟ ਅਤੇ ਪੋਰਟਲ**\nਸਿੱਧਾ ਅਧਿਕਾਰਤ ਪੋਰਟਲ: [${scheme.officialUrl}](${scheme.officialUrl}) *(ਸਰੋਤ: ${scheme.source})*`,
+      '',
+      `*ਸੂਚਨਾ: ਸਕੀਮ ਸਾਥੀ ਸਿਰਫ਼ ਸੂਚਨਾਤਮਕ ਮਾਰਗਦਰਸ਼ਨ ਪ੍ਰਦਾਨ ਕਰਦਾ ਹੈ। ਅਰਜ਼ੀ ਦੇਣ ਤੋਂ ਪਹਿਲਾਂ ਹਮੇਸ਼ਾ ਅਧਿਕਾਰਤ ਸਰਕਾਰੀ ਪੋਰਟਲ ਤੇ ਵੇਰਵਿਆਂ ਦੀ ਪੁਸ਼ਟੀ ਕਰੋ।*`,
+    ];
+
+    return {
+      text: lines.join('\n'),
+      schemes: [loc],
+      intent: 'GENERAL_INFO',
+      targetSchemeId: scheme.id,
+      language,
+    };
+  }
+
   // English (default)
   const headings = [
     `### ${scheme.name} (${scheme.shortName || scheme.name})`,
@@ -871,6 +1081,21 @@ function formatBenefitsResponse(scheme: Scheme, language: SupportedLanguage): Bo
       `**लाभ का सारांश:**\n• **मुख्य लाभ:** ${scheme.benefit}\n• **लक्षित लाभार्थी:** ${scheme.beneficiaries || scheme.category}\n• **हस्तांतरण माध्यम:** प्रत्यक्ष लाभ अंतरण (DBT)`,
       '',
       `**सत्यापित आधिकारिक पोर्टल:** [${scheme.officialUrl}](${scheme.officialUrl}) · अद्यतन ${scheme.lastUpdated}`,
+    ];
+    return { text: lines.join('\n'), intent: 'BENEFITS', targetSchemeId: scheme.id, language };
+  }
+
+  if (language === 'Punjabi') {
+    const loc = getLocalizedScheme(scheme, 'Punjabi');
+    const isPmKisan = scheme.id === 'pm-kisan';
+    const lines = [
+      `### ${loc.name} ਦੇ ਵਿੱਤੀ ਲਾਭ`,
+      '',
+      `**ਭੁਗਤਾਨ ਅਤੇ ਵਿੱਤੀ ਸਹਾਇਤਾ ਦੇ ਵੇਰਵੇ:**\n${isPmKisan ? 'ਪ੍ਰਤੀ ਸਾਲ ₹6,000 ਦੀ ਸਿੱਧੀ ਆਮਦਨ ਸਹਾਇਤਾ ₹2,000 ਦੀਆਂ ਤਿੰਨ ਬਰਾਬਰ ਕਿਸ਼ਤਾਂ ਵਿੱਚ ਸਿੱਧੇ ਆਧਾਰ ਨਾਲ ਜੁੜੇ ਬੈਂਕ ਖਾਤੇ ਵਿੱਚ ਡੀਬੀਟੀ (DBT) ਰਾਹੀਂ ਭੇਜੀ ਜਾਂਦੀ ਹੈ।' : loc.financialDetails || loc.benefit}`,
+      '',
+      `**ਲਾਭ ਦਾ ਸਾਰ:**\n• **ਮੁੱਖ ਲਾਭ:** ${loc.benefit}\n• **ਟੀਚਾ ਲਾਭਪਾਤਰੀ:** ${loc.beneficiaries || loc.category}\n• **ਭੁਗਤਾਨ ਵਿਧੀ:** ਸਿੱਧਾ ਲਾਭ ਤਬਾਦਲਾ (DBT)`,
+      '',
+      `**ਤਸਦੀਕਸ਼ੁਦਾ ਅਧਿਕਾਰਤ ਪੋਰਟਲ:** [${scheme.officialUrl}](${scheme.officialUrl}) · ਅੱਪਡੇਟ ਕੀਤਾ ${scheme.lastUpdated}`,
     ];
     return { text: lines.join('\n'), intent: 'BENEFITS', targetSchemeId: scheme.id, language };
   }
@@ -950,6 +1175,37 @@ function formatGeneralEligibilityResponse(scheme: Scheme, language: SupportedLan
     return { text: lines.join('\n'), intent: 'ELIGIBILITY', targetSchemeId: scheme.id, language };
   }
 
+  if (language === 'Punjabi') {
+    const loc = getLocalizedScheme(scheme, 'Punjabi');
+    const isPmKisan = scheme.id === 'pm-kisan';
+    const lines = [
+      `### ${loc.name} ਲਈ ਯੋਗਤਾ ਲੋੜਾਂ`,
+      '',
+      `**ਕੌਣ ਅਰਜ਼ੀ ਦੇ ਸਕਦਾ ਹੈ:**`,
+      ...(isPmKisan
+        ? [
+            '• ਪਰਿਵਾਰ ਦੇ ਨਾਮ ਤੇ ਵਾਹੀਯੋਗ ਖੇਤੀਬਾੜੀ ਜ਼ਮੀਨ ਦੀ ਮਲਕੀਅਤ ਹੋਣੀ ਚਾਹੀਦੀ ਹੈ।',
+            '• ਰਾਜ ਭੂ-ਰਿਕਾਰਡ ਪੋਰਟਲ ਤੇ ਜ਼ਮੀਨੀ ਰਿਕਾਰਡ ਤਸਦੀਕ ਹੋਣਾ ਚਾਹੀਦਾ ਹੈ।',
+            '• ਬੈਂਕ ਖਾਤਾ ਆਧਾਰ ਨਾਲ ਲਿੰਕ ਅਤੇ ਡੀਬੀਟੀ (DBT) ਸਮਰੱਥ ਹੋਣਾ ਚਾਹੀਦਾ ਹੈ।',
+            '• ਪੀਐਮ-ਕਿਸਾਨ ਪੋਰਟਲ ਤੇ ਲਾਜ਼ਮੀ ਈ-ਕੇਵਾਈਸੀ ਪੂਰੀ ਹੋਣੀ ਚਾਹੀਦੀ ਹੈ।',
+          ]
+        : (loc.eligibilityCriteria || [loc.eligibility]).map((item) => `• ${item}`)),
+      '',
+      `**ਮੁੱਖ ਅਯੋਗਤਾ ਅਤੇ ਬੇਦਖਲੀ ਨਿਯਮ:**`,
+      ...(isPmKisan
+        ? [
+            '• ਸੰਵਿਧਾਨਕ ਅਹੁਦਾ ਧਾਰਕ (ਮੌਜੂਦਾ ਜਾਂ ਸਾਬਕਾ)।',
+            '• ਸਰਕਾਰੀ ਕਰਮਚਾਰੀ ਅਤੇ ₹10,000 ਤੋਂ ਵੱਧ ਮਾਸਿਕ ਪੈਨਸ਼ਨ ਪ੍ਰਾਪਤ ਕਰਨ ਵਾਲੇ ਸੇਵਾਮੁਕਤ।',
+            '• ਪਿਛਲੇ ਮੁਲਾਂਕਣ ਸਾਲ ਵਿੱਚ ਇਨਕਮ ਟੈਕਸ ਅਦਾ ਕਰਨ ਵਾਲੇ ਵਿਅਕਤੀ।',
+            '• ਡਾਕਟਰ, ਇੰਜੀਨੀਅਰ, ਵਕੀਲ ਅਤੇ ਸੀਏ ਵਰਗੇ ਰਜਿਸਟਰਡ ਪੇਸ਼ੇਵਰ।',
+          ]
+        : (scheme.ineligibilityReasons || []).map((item) => `• ${item}`)),
+      '',
+      `**ਤਸਦੀਕਸ਼ੁਦਾ ਅਧਿਕਾਰਤ ਪੋਰਟਲ:** [${scheme.officialUrl}](${scheme.officialUrl}) *(ਸਰੋਤ: ${scheme.source})*`,
+    ];
+    return { text: lines.join('\n'), intent: 'ELIGIBILITY', targetSchemeId: scheme.id, language };
+  }
+
   // English
   const criteria = scheme.eligibilityCriteria || [scheme.eligibility];
   const ineligibility = scheme.ineligibilityReasons || [];
@@ -1020,6 +1276,30 @@ function formatDocumentsResponse(scheme: Scheme, language: SupportedLanguage): B
     return { text: lines.join('\n'), intent: 'DOCUMENTS', targetSchemeId: scheme.id, language };
   }
 
+  if (language === 'Punjabi') {
+    const loc = getLocalizedScheme(scheme, 'Punjabi');
+    const isPmKisan = scheme.id === 'pm-kisan';
+    const lines = [
+      `### ${loc.name} ਲਈ ਲੋੜੀਂਦੇ ਦਸਤਾਵੇਜ਼`,
+      '',
+      `ਅਰਜ਼ੀ ਸ਼ੁਰੂ ਕਰਨ ਤੋਂ ਪਹਿਲਾਂ ਕਿਰਪਾ ਕਰਕੇ ਹੇਠਾਂ ਦਿੱਤੇ ਤਸਦੀਕਸ਼ੁਦਾ ਦਸਤਾਵੇਜ਼ ਤਿਆਰ ਰੱਖੋ:`,
+      '',
+      ...(isPmKisan
+        ? [
+            '• **ਆਧਾਰ ਕਾਰਡ** (ਪਛਾਣ ਅਤੇ ਲਾਜ਼ਮੀ ਈ-ਕੇਵਾਈਸੀ ਲਈ)',
+            '• **ਖੇਤੀਬਾੜੀ ਜ਼ਮੀਨ ਦੇ ਦਸਤਾਵੇਜ਼** (ਫ਼ਰਦ / ਜਮ੍ਹਾਂਬੰਦੀ ਨਕਲ)',
+            '• **ਬੈਂਕ ਪਾਸਬੁੱਕ** (ਆਧਾਰ ਲਿੰਕਡ ਅਤੇ ਡੀਬੀਟੀ ਸਮਰੱਥ ਖਾਤਾ)',
+            '• **ਸਰਗਰਮ ਮੋਬਾਈਲ ਨੰਬਰ** (ਆਧਾਰ ਓਟੀਪੀ ਪ੍ਰਮਾਣਿਕਤਾ ਲਈ)',
+          ]
+        : loc.documents.map((doc) => `• **${doc}**`)),
+      '',
+      `**ਮਹੱਤਵਪੂਰਨ ਸੁਝਾਅ:**\n• ਆਧਾਰ ਅਤੇ ਬੈਂਕ ਪਾਸਬੁੱਕ ਵਿੱਚ ਨਾਮ ਬਿਲਕੁਲ ਇੱਕੋ ਜਿਹਾ ਹੋਣਾ ਚਾਹੀਦਾ ਹੈ।\n• ਬੈਂਕ ਖਾਤੇ ਵਿੱਚ ਡੀਬੀਟੀ (DBT) ਕਿਰਿਆਸ਼ੀਲ ਹੋਣਾ ਲਾਜ਼ਮੀ ਹੈ।`,
+      '',
+      `**ਅਧਿਕਾਰਤ ਅਰਜ਼ੀ ਪੋਰਟਲ:** [${scheme.officialUrl}](${scheme.officialUrl})`,
+    ];
+    return { text: lines.join('\n'), intent: 'DOCUMENTS', targetSchemeId: scheme.id, language };
+  }
+
   // English
   const lines = [
     `### Required Documents for ${scheme.name}`,
@@ -1075,6 +1355,26 @@ function formatApplicationProcessResponse(scheme: Scheme, language: SupportedLan
     return { text: lines.join('\n'), intent: 'APPLICATION_PROCESS', targetSchemeId: scheme.id, language };
   }
 
+  if (language === 'Punjabi') {
+    const loc = getLocalizedScheme(scheme, 'Punjabi');
+    const lines = [
+      `### ${loc.name} ਲਈ ਕਦਮ-ਦਰ-ਕਦਮ ਅਰਜ਼ੀ ਪ੍ਰਕਿਰਿਆ`,
+      '',
+      `**ਔਨਲਾਈਨ ਅਰਜ਼ੀ ਦੇ ਪੜਾਅ:**`,
+      `1. ਅਧਿਕਾਰਤ ਪੋਰਟਲ ਤੇ ਜਾਓ: ${scheme.officialUrl}`,
+      '2. "New Registration" ਵਿਕਲਪ ਦੀ ਚੋਣ ਕਰੋ।',
+      '3. ਆਧਾਰ ਨੰਬਰ ਅਤੇ ਮੋਬਾਈਲ ਨੰਬਰ ਦਰਜ ਕਰਕੇ ਓਟੀਪੀ ਨਾਲ ਪੁਸ਼ਟੀ ਕਰੋ।',
+      '4. ਨਿੱਜੀ ਅਤੇ ਲੋੜੀਂਦੇ ਦਸਤਾਵੇਜ਼ਾਂ ਦੇ ਵੇਰਵੇ ਭਰੋ।',
+      '5. ਫਾਰਮ ਜਮ੍ਹਾਂ ਕਰੋ ਅਤੇ ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਰਸੀਦ ਸੁਰੱਖਿਅਤ ਰੱਖੋ।',
+      '',
+      `**ਔਫਲਾਈਨ ਸਹਾਇਤਾ:**`,
+      'ਆਪਣੇ ਨਜ਼ਦੀਕੀ ਕਾਮਨ ਸਰਵਿਸ ਸੈਂਟਰ (CSC) ਜਾਂ ਬਲਾਕ ਦਫ਼ਤਰ ਜਾ ਕੇ ਵੀ ਅਰਜ਼ੀ ਦਿੱਤੀ ਜਾ ਸਕਦੀ ਹੈ।',
+      '',
+      `**ਅਧਿਕਾਰਤ ਪੋਰਟਲ ਲਿੰਕ:** [${scheme.officialUrl}](${scheme.officialUrl})`,
+    ];
+    return { text: lines.join('\n'), intent: 'APPLICATION_PROCESS', targetSchemeId: scheme.id, language };
+  }
+
   // English
   const steps = scheme.applicationSteps || [
     `1. Visit the official portal at ${scheme.officialUrl}`,
@@ -1114,6 +1414,16 @@ function formatOfficialLinkResponse(scheme: Scheme, language: SupportedLanguage)
   if (language === 'Hindi') {
     return {
       text: `### ${scheme.name} के लिए आधिकारिक पोर्टल लिंक\n\nआप सीधे आधिकारिक सरकारी पोर्टल पर यहां जा सकते हैं:\n\n🌐 **आधिकारिक वेबसाइट:** [${scheme.officialUrl}](${scheme.officialUrl})\n\n**पोर्टल विवरण:**\n• **डोमेन:** ${scheme.source}\n• **प्रशासन:** भारत सरकार / केंद्रीय क्षेत्र\n• **सत्यापित तिथि:** ${scheme.lastUpdated}\n\n*सुरक्षा सुझाव: व्यक्तिगत विवरण दर्ज करने से पहले हमेशा सुनिश्चित करें कि वेबसाइट पता https:// से शुरू होता है और .gov.in डोमेन पर है।*`,
+      intent: 'OFFICIAL_LINK',
+      targetSchemeId: scheme.id,
+      language,
+    };
+  }
+
+  if (language === 'Punjabi') {
+    const loc = getLocalizedScheme(scheme, 'Punjabi');
+    return {
+      text: `### ${loc.name} ਲਈ ਅਧਿਕਾਰਤ ਪੋਰਟਲ ਲਿੰਕ\n\nਤੁਸੀਂ ਸਿੱਧੇ ਅਧਿਕਾਰਤ ਸਰਕਾਰੀ ਪੋਰਟਲ ਤੇ ਇੱਥੇ ਜਾ ਸਕਦੇ ਹੋ:\n\n🌐 **ਅਧਿਕਾਰਤ ਵੈੱਬਸਾਈਟ:** [${scheme.officialUrl}](${scheme.officialUrl})\n\n**ਪੋਰਟਲ ਦੇ ਵੇਰਵੇ:**\n• **ਡੋਮੇਨ:** ${scheme.source}\n• **ਪ੍ਰਸ਼ਾਸਨ:** ਭਾਰਤ ਸਰਕਾਰ / ਕੇਂਦਰੀ ਖੇਤਰ\n• **ਤਸਦੀਕਸ਼ੁਦਾ ਮਿਤੀ:** ${scheme.lastUpdated}\n\n*ਸੁਰੱਖਿਆ ਸੁਝਾਅ: ਨਿੱਜੀ ਵੇਰਵੇ ਦਰਜ ਕਰਨ ਤੋਂ ਪਹਿਲਾਂ ਹਮੇਸ਼ਾ ਯਕੀਨੀ ਬਣਾਓ ਕਿ ਵੈੱਬਸਾਈਟ ਪਤਾ https:// ਨਾਲ ਸ਼ੁਰੂ ਹੁੰਦਾ ਹੈ ਅਤੇ .gov.in ਜਾਂ .nic.in ਡੋਮੇਨ ਤੇ ਹੈ।*`,
       intent: 'OFFICIAL_LINK',
       targetSchemeId: scheme.id,
       language,
@@ -1216,6 +1526,48 @@ function formatPersonalEligibilityResponse(
     };
   }
 
+  if (language === 'Punjabi') {
+    const loc = getLocalizedScheme(scheme, 'Punjabi');
+    const isPmKisan = scheme.id === 'pm-kisan';
+    const lines = [
+      `### ਯੋਗਤਾ ਮੁਲਾਂਕਣ: ${loc.name}`,
+      '',
+      `**ਮੁੱਖ ਯੋਗਤਾ ਸ਼ਰਤਾਂ:**`,
+      ...(isPmKisan
+        ? [
+            '• ਵਾਹੀਯੋਗ ਖੇਤੀਬਾੜੀ ਜ਼ਮੀਨ ਦੀ ਮਲਕੀਅਤ ਵਾਲਾ ਕਿਸਾਨ ਪਰਿਵਾਰ।',
+            '• ਰਾਜ ਦੇ ਜ਼ਮੀਨੀ ਰਿਕਾਰਡ ਵਿੱਚ ਫ਼ਰਦ/ਜਮ੍ਹਾਂਬੰਦੀ ਤਸਦੀਕਸ਼ੁਦਾ।',
+            '• ਆਧਾਰ ਲਿੰਕਡ ਅਤੇ ਡੀਬੀਟੀ ਸਮਰੱਥ ਬੈਂਕ ਖਾਤਾ।',
+            '• ਲਾਜ਼ਮੀ ਈ-ਕੇਵਾਈਸੀ (e-KYC) ਮੁਕੰਮਲ ਹੋਣੀ ਚਾਹੀਦੀ ਹੈ।',
+          ]
+        : (loc.eligibilityCriteria || [loc.eligibility]).map((c) => `• ${c}`)),
+      '',
+      `**ਤੁਹਾਡੇ ਪ੍ਰੋਫਾਈਲ ਵੇਰਵੇ:**`,
+      userProfile?.occupation ? `• ਕਿੱਤਾ: ${userProfile.occupation}` : '• ਕਿੱਤਾ: ਨਿਰਧਾਰਿਤ ਨਹੀਂ',
+      userProfile?.state ? `• ਰਾਜ: ${userProfile.state}` : '',
+      userProfile?.ownsLand !== undefined ? `• ਕੀ ਖੇਤੀਬਾੜੀ ਜ਼ਮੀਨ ਹੈ: ${userProfile.ownsLand ? 'ਹਾਂ' : 'ਨਹੀਂ'}` : '',
+      '',
+      `**ਯੋਗਤਾ ਪੁਸ਼ਟੀ ਲਈ ਲੋੜੀਂਦੀ ਜਾਣਕਾਰੀ:**`,
+      '❓ ਕੀ ਤੁਹਾਡੇ ਨਾਮ ਤੇ ਖੇਤੀਬਾੜੀ ਜ਼ਮੀਨ ਦੀ ਫ਼ਰਦ/ਜਮ੍ਹਾਂਬੰਦੀ ਹੈ?',
+      '❓ ਕੀ ਬੈਂਕ ਖਾਤੇ ਵਿੱਚ ਡੀਬੀਟੀ (DBT) ਕਿਰਿਆਸ਼ੀਲ ਹੈ?',
+      '❓ ਕੀ ਤੁਸੀਂ ਈ-ਕੇਵਾਈਸੀ ਮੁਕੰਮਲ ਕਰ ਲਈ ਹੈ?',
+      '❓ ਕੀ ਤੁਸੀਂ ਇਨਕਮ ਟੈਕਸ ਅਦਾਕਾਰ ਹੋ? (ਨਹੀਂ ਹੋਣਾ ਚਾਹੀਦਾ)',
+      '',
+      `⚠️ **ਮਹੱਤਵਪੂਰਨ ਸੂਚਨਾ ਅਤੇ ਬੇਦਾਅਵਾ:**\nਸਕੀਮ ਸਾਥੀ ਸਿਰਫ਼ ਸ਼ੁਰੂਆਤੀ ਮਾਰਗਦਰਸ਼ਨ ਪ੍ਰਦਾਨ ਕਰਦਾ ਹੈ। **ਇਸ ਚੈਟਬੌਟ ਦੁਆਰਾ ਯੋਗਤਾ ਦੀ ਗਰੰਟੀ ਕਦੇ ਨਹੀਂ ਦਿੱਤੀ ਜਾ ਸਕਦੀ।** ਅੰਤਿਮ ਪ੍ਰਵਾਨਗੀ ਖੇਤੀਬਾੜੀ ਵਿਭਾਗ ਅਤੇ [${scheme.officialUrl}](${scheme.officialUrl}) ਪੋਰਟਲ ਦੁਆਰਾ ਨਿਰਧਾਰਿਤ ਕੀਤੀ ਜਾਂਦੀ ਹੈ।`,
+    ].filter(Boolean);
+
+    return {
+      text: lines.join('\n'),
+      actionButton: {
+        label: 'ਯੋਗਤਾ ਦੀ ਜਾਂਚ ਕਰੋ',
+        route: '/eligibility',
+      },
+      intent: 'PERSONAL_ELIGIBILITY',
+      targetSchemeId: scheme.id,
+      language,
+    };
+  }
+
   // English
   const knownDetails: string[] = [];
   const missingQuestions: string[] = [];
@@ -1283,6 +1635,16 @@ function formatIneligibilityResponse(scheme: Scheme, language: SupportedLanguage
   if (language === 'Hindi') {
     return {
       text: `### ${scheme.name} के लिए अपात्रता के कारण\n\nसरकारी नियमों के अनुसार, निम्नलिखित श्रेणियों के आवेदक **अपात्र होंगे**:\n\n• संवैधानिक पद धारक।\n• सरकारी कर्मचारी और ₹10,000 से अधिक मासिक पेंशन पाने वाले सेवानिवृत्त।\n• पिछले वर्ष आयकर का भुगतान करने वाले।\n• पेशेवर डॉक्टर, इंजीनियर, वकील और सीए।\n\nआधिकारिक दिशानिर्देश: [${scheme.officialUrl}](${scheme.officialUrl})`,
+      intent: 'INELIGIBILITY',
+      targetSchemeId: scheme.id,
+      language,
+    };
+  }
+
+  if (language === 'Punjabi') {
+    const loc = getLocalizedScheme(scheme, 'Punjabi');
+    return {
+      text: `### ${loc.name} ਲਈ ਅਯੋਗਤਾ ਦੇ ਕਾਰਨ\n\nਸਰਕਾਰੀ ਨਿਯਮਾਂ ਅਨੁਸਾਰ, ਹੇਠ ਲਿਖੀਆਂ ਸ਼੍ਰੇਣੀਆਂ ਦੇ ਬਿਨੈਕਾਰ **ਅਯੋਗ ਹੋਣਗੇ**:\n\n• ਸੰਵਿਧਾਨਕ ਅਹੁਦਾ ਧਾਰਕ।\n• ਸਰਕਾਰੀ ਕਰਮਚਾਰੀ ਅਤੇ ₹10,000 ਤੋਂ ਵੱਧ ਮਾਸਿਕ ਪੈਨਸ਼ਨ ਪ੍ਰਾਪਤ ਕਰਨ ਵਾਲੇ ਸੇਵਾਮੁਕਤ।\n• ਪਿਛਲੇ ਸਾਲ ਇਨਕਮ ਟੈਕਸ ਅਦਾ ਕਰਨ ਵਾਲੇ।\n• ਪੇਸ਼ੇਵਰ ਡਾਕਟਰ, ਇੰਜੀਨੀਅਰ, ਵਕੀਲ ਅਤੇ ਸੀਏ।\n\nਅਧਿਕਾਰਤ ਦਿਸ਼ਾ-ਨਿਰਦੇਸ਼: [${scheme.officialUrl}](${scheme.officialUrl})`,
       intent: 'INELIGIBILITY',
       targetSchemeId: scheme.id,
       language,
@@ -1394,6 +1756,30 @@ function formatCategoryRecommendations(
     };
   }
 
+  if (language === 'Punjabi') {
+    const catLabel = category === 'Farmers' ? 'ਕਿਸਾਨਾਂ ਲਈ' : category;
+    const lines = [
+      `### ${catLabel} ਸਰਕਾਰੀ ਸਕੀਮਾਂ`,
+      '',
+      `ਇੱਥੇ ਤਸਦੀਕਸ਼ੁਦਾ ਕੇਂਦਰੀ ਕਲਿਆਣਕਾਰੀ ਸਕੀਮਾਂ ਉਪਲਬਧ ਹਨ:`,
+      '',
+      ...targetSchemes.map((s) => {
+        const loc = getLocalizedScheme(s, 'Punjabi');
+        return `• **${loc.name} (${loc.shortName || loc.name})**\n  - **ਲਾਭ:** ${loc.benefit}\n  - **ਯੋਗਤਾ:** ${loc.eligibility}\n  - **ਅਧਿਕਾਰਤ ਪੋਰਟਲ:** [${s.officialUrl}](${s.officialUrl})`;
+      }),
+      '',
+      `*ਕਿਸੇ ਵੀ ਸਕੀਮ ਦੇ ਦਸਤਾਵੇਜ਼ਾਂ ਜਾਂ ਅਰਜ਼ੀ ਪ੍ਰਕਿਰਿਆ ਬਾਰੇ ਬੇਝਿਜਕ ਪੁੱਛੋ।*`,
+    ];
+
+    return {
+      text: lines.join('\n'),
+      schemes: targetSchemes.map((s) => getLocalizedScheme(s, 'Punjabi')),
+      intent: 'RECOMMENDED_SCHEMES',
+      targetSchemeId: targetSchemes[0]?.id,
+      language,
+    };
+  }
+
   // English
   const lines = [
     `### Government Schemes for ${category}`,
@@ -1434,6 +1820,14 @@ function formatGreetingResponse(userProfile: UserProfile | null | undefined, lan
     };
   }
 
+  if (language === 'Punjabi') {
+    return {
+      text: `### ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ! ਸਕੀਮ ਸਾਥੀ ਵਿੱਚ ਤੁਹਾਡਾ ਸਵਾਗਤ ਹੈ\n\nਮੈਂ ਭਾਰਤੀ ਸਰਕਾਰੀ ਸਕੀਮਾਂ ਲਈ ਤੁਹਾਡਾ ਡਿਜੀਟਲ ਗਾਈਡ ਹਾਂ।\n\nਤੁਸੀਂ ਮੇਰੇ ਤੋਂ ਪੁੱਛ ਸਕਦੇ ਹੋ:\n• **ਸ਼੍ਰੇਣੀ ਅਨੁਸਾਰ ਸਕੀਮਾਂ** (ਕਿਸਾਨ, ਵਿਦਿਆਰਥੀ, ਸਿਹਤ, ਆਵਾਸ, ਕਾਰੋਬਾਰ, ਬਜ਼ੁਰਗ ਨਾਗਰਿਕ)\n• **ਯੋਗਤਾ ਲੋੜਾਂ**\n• **ਲੋੜੀਂਦੇ ਦਸਤਾਵੇਜ਼ਾਂ ਦੀ ਸੂਚੀ**\n• **ਕਦਮ-ਦਰ-ਕਦਮ ਅਰਜ਼ੀ ਪ੍ਰਕਿਰਿਆ ਅਤੇ ਅਧਿਕਾਰਤ ਲਿੰਕ**\n\nਅੱਜ ਮੈਂ ਤੁਹਾਡੀ ਕੀ ਮਦਦ ਕਰ ਸਕਦਾ ਹਾਂ?`,
+      intent: 'GREETING',
+      language,
+    };
+  }
+
   return {
     text: `### Namaste! Welcome to Scheme Saathi\n\nI am your verified digital guide for Indian government schemes and citizen services.\n\nYou can ask me to:\n• **Explore schemes** by category (Farmers, Students, Health, Housing, Business, Seniors)\n• **Check eligibility requirements** for any specific scheme\n• **View complete document checklists**\n• **Learn step-by-step application procedures** and get direct official .gov.in links\n\nHow can I help you today?`,
     intent: 'GREETING',
@@ -1447,6 +1841,18 @@ function formatEligibilityCheckShortcut(language: SupportedLanguage): BotRespons
       text: `### ಯೋಜನೆ ಅರ್ಹತೆ ಪರಿಶೀಲನೆ\n\nನಮ್ಮ ಹಂತ-ಹಂತದ ಅರ್ಹತಾ ಪರಿಶೀಲನಾ ಸಾಧನದ ಮೂಲಕ ನೀವು ಎಲ್ಲಾ ಕಲ್ಯಾಣ ಯೋಜನೆಗಳ ಅರ್ಹತೆಯನ್ನು ಪರಿಶೀಲಿಸಬಹುದು.\n\nಕೆಲವು ಸರಳ ಪ್ರಶ್ನೆಗಳಿಗೆ ಉತ್ತರಿಸಿ ತಕ್ಷಣದ ವೈಯಕ್ತಿಕ ಮೌಲ್ಯಮಾಪನ ಪಡೆಯಿರಿ.`,
       actionButton: {
         label: 'ಅರ್ಹತೆ ಪರಿಶೀಲನೆ ಪ್ರಾರಂಭಿಸಿ',
+        route: '/eligibility',
+      },
+      intent: 'ELIGIBILITY_TOOL',
+      language,
+    };
+  }
+
+  if (language === 'Punjabi') {
+    return {
+      text: `### ਸਕੀਮ ਯੋਗਤਾ ਜਾਂਚ\n\nਤੁਸੀਂ ਸਾਡੇ ਕਦਮ-ਦਰ-ਕਦਮ ਯੋਗਤਾ ਜਾਂਚ ਸਾਧਨ ਰਾਹੀਂ ਸਾਰੀਆਂ ਕੇਂਦਰੀ ਅਤੇ ਰਾਜ ਭਲਾਈ ਸਕੀਮਾਂ ਲਈ ਆਪਣੀ ਯੋਗਤਾ ਦੀ ਜਾਂਚ ਕਰ ਸਕਦੇ ਹੋ।\n\nਆਪਣੇ ਕਿੱਤੇ, ਉਮਰ, ਰਾਜ ਅਤੇ ਸ਼੍ਰੇਣੀ ਬਾਰੇ ਕੁਝ ਸਧਾਰਨ ਸਵਾਲਾਂ ਦੇ ਜਵਾਬ ਦੇ ਕੇ ਤੁਰੰਤ ਮੁਲਾਂਕਣ ਪ੍ਰਾਪਤ ਕਰੋ।`,
+      actionButton: {
+        label: 'ਯੋਗਤਾ ਜਾਂਚ ਸ਼ੁਰੂ ਕਰੋ',
         route: '/eligibility',
       },
       intent: 'ELIGIBILITY_TOOL',
@@ -1469,9 +1875,35 @@ function formatGenericExplore(language: SupportedLanguage): BotResponseResult {
   if (language === 'Kannada') {
     return {
       text: `### ಸರ್ಕಾರಿ ಯೋಜನೆಗಳನ್ನು ಅನ್ವೇಷಿಸಿ\n\nಸ್ಕೀಮ್ ಸಾಥಿ ಪ್ರಮುಖ ನಾಗರಿಕ ವರ್ಗಗಳ ಪರಿಶೀಲಿಸಿದ ಮಾಹಿತಿಯನ್ನು ಒಳಗೊಂಡಿದೆ:\n\n• **ರೈತರು:** ಪಿಎಂ-ಕಿಸಾನ್, ಪಿಎಂ ಫಸಲ್ ಬಿಮಾ, ಕಿಸಾನ್ ಕ್ರೆಡಿಟ್ ಕಾರ್ಡ್\n• **ಆರೋಗ್ಯ:** ಆಯುಷ್ಮಾನ್ ಭಾರತ್ (PM-JAY)\n• **ವಸತಿ:** ಪಿಎಂ ಆವಾಸ್ ಯೋಜನೆ (PMAY)\n• **ವಿದ್ಯಾರ್ಥಿಗಳು:** ರಾಷ್ಟ್ರೀಯ ವಿದ್ಯಾರ್ಥಿವೇತನ ಪೋರ್ಟಲ್ (NSP)\n• **ವ್ಯವಹಾರ:** ಪಿಎಂ ಮುದ್ರಾ ಯೋಜನೆ, ಪಿಎಂ ಸ್ವನಿಧಿ\n• **ಪಿಂಚಣಿ:** ಅಟಲ್ ಪಿಂಚಣಿ ಯೋಜನೆ (APY)\n\nಯಾವುದೇ ಯೋಜನೆಯ ಬಗ್ಗೆ ವಿವರಗಳನ್ನು ಕೇಳಿ ಅಥವಾ ಯೋಜನೆ ಸಂಗ್ರಹವನ್ನು ಬ್ರೌಸ್ ಮಾಡಿ.`,
-      schemes: MOCK_SCHEMES.slice(0, 4),
+      schemes: MOCK_SCHEMES.slice(0, 4).map((s) => getLocalizedScheme(s, 'Kannada')),
       actionButton: {
         label: 'ಯೋಜನೆ ಸಂಗ್ರಹ ವೀಕ್ಷಿಸಿ',
+        route: '/library',
+      },
+      intent: 'EXPLORE_ALL_SCHEMES',
+      language,
+    };
+  }
+
+  if (language === 'Hindi') {
+    return {
+      text: `### सरकारी योजनाओं का अन्वेषण करें\n\nस्कीम साथी प्रमुख नागरिक श्रेणियों में सत्यापित जानकारी प्रदान करता है:\n\n• **किसान:** पीएम-किसान, पीएम फसल बीमा, किसान क्रेडिट कार्ड\n• **स्वास्थ्य:** आयुष्मान भारत (PM-JAY)\n• **आवास:** पीएम आवास योजना (PMAY)\n• **छात्र:** राष्ट्रीय छात्रवृत्ति पोर्टल (NSP)\n• **व्यापार:** पीएम मुद्रा योजना, पीएम स्वनिधि\n• **पेंशन:** अटल पेंशन योजना (APY)\n\nकिसी भी योजना के बारे में पूछें या पूरी योजना लाइब्रेरी देखें।`,
+      schemes: MOCK_SCHEMES.slice(0, 4).map((s) => getLocalizedScheme(s, 'Hindi')),
+      actionButton: {
+        label: 'योजना लाइब्रेरी देखें',
+        route: '/library',
+      },
+      intent: 'EXPLORE_ALL_SCHEMES',
+      language,
+    };
+  }
+
+  if (language === 'Punjabi') {
+    return {
+      text: `### ਸਰਕਾਰੀ ਸਕੀਮਾਂ ਦੀ ਪੜਚੋਲ ਕਰੋ\n\nਸਕੀਮ ਸਾਥੀ ਮੁੱਖ ਨਾਗਰਿਕ ਸ਼੍ਰੇਣੀਆਂ ਵਿੱਚ ਪ੍ਰਮਾਣਿਤ ਜਾਣਕਾਰੀ ਪ੍ਰਦਾਨ ਕਰਦਾ ਹੈ:\n\n• **ਕਿਸਾਨ:** ਪੀਐਮ-ਕਿਸਾਨ, ਪੀਐਮ ਫ਼ਸਲ ਬੀਮਾ, ਕਿਸਾਨ ਕ੍ਰੈਡਿਟ ਕਾਰਡ\n• **ਸਿਹਤ:** ਆਯੁਸ਼ਮਾਨ ਭਾਰਤ (PM-JAY)\n• **ਆਵਾਸ:** ਪੀਐਮ ਆਵਾਸ ਯੋਜਨਾ (PMAY)\n• **ਵਿਦਿਆਰਥੀ:** ਰਾਸ਼ਟਰੀ ਸਕਾਲਰਸ਼ਿਪ ਪੋਰਟਲ (NSP)\n• **ਕਾਰੋਬਾਰ:** ਪੀਐਮ ਮੁਦਰਾ ਯੋਜਨਾ, ਪੀਐਮ ਸਵਨਿਧੀ\n• **ਪੈਨਸ਼ਨ:** ਅਟਲ ਪੈਨਸ਼ਨ ਯੋਜਨਾ (APY)\n\nਉੱਪਰ ਦਿੱਤੀ ਕਿਸੇ ਵੀ ਸਕੀਮ ਬਾਰੇ ਪੁੱਛੋ ਜਾਂ ਪੂਰੀ ਲਾਇਬ੍ਰੇਰੀ ਵੇਖੋ।`,
+      schemes: MOCK_SCHEMES.slice(0, 4).map((s) => getLocalizedScheme(s, 'Punjabi')),
+      actionButton: {
+        label: 'ਸਕੀਮ ਲਾਇਬ੍ਰੇਰੀ ਵੇਖੋ',
         route: '/library',
       },
       intent: 'EXPLORE_ALL_SCHEMES',
@@ -1516,6 +1948,18 @@ function formatFallbackResponse(language: SupportedLanguage): BotResponseResult 
     };
   }
 
+  if (language === 'Punjabi') {
+    return {
+      text: `### ਸਕੀਮ ਸਾਥੀ ਜਾਣਕਾਰੀ ਗਾਈਡ\n\nਸਾਡੇ ਪ੍ਰਮਾਣਿਤ ਡੇਟਾਬੇਸ ਵਿੱਚ ਤੁਹਾਡੇ ਸ਼ਬਦਾਂ ਨਾਲ ਮੇਲ ਖਾਂਦੀ ਕੋਈ ਖਾਸ ਸਕੀਮ ਨਹੀਂ ਮਿਲੀ।\n\nਸਹੀ ਜਾਣਕਾਰੀ ਲਈ ਇਸ ਤਰ੍ਹਾਂ ਪੁੱਛਣ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰੋ:\n• ਸਕੀਮ ਦਾ ਨਾਮ ਦੱਸੋ (ਜਿਵੇਂ: **PM-KISAN**, **ਆਯੁਸ਼ਮਾਨ ਭਾਰਤ**, **ਪੀਐਮ ਆਵਾਸ**, **ਮੁਦਰਾ ਲੋਨ**)\n• ਸ਼੍ਰੇਣੀ ਅਨੁਸਾਰ ਪੁੱਛੋ (ਜਿਵੇਂ: *"ਕਿਸਾਨਾਂ ਲਈ ਸਕੀਮਾਂ"*, *"ਵਿਦਿਆਰਥੀਆਂ ਲਈ ਵਜ਼ੀਫ਼ੇ"*)\n• ਕੋਈ ਖਾਸ ਸਵਾਲ ਪੁੱਛੋ (ਜਿਵੇਂ: *"ਪੀਐਮ-ਕਿਸਾਨ ਦੇ ਕੀ ਲਾਭ ਹਨ?"*, *"ਆਯੁਸ਼ਮਾਨ ਕਾਰਡ ਲਈ ਕਿਹੜੇ ਦਸਤਾਵੇਜ਼ ਚਾਹੀਦੇ ਹਨ?"*)\n\nਜਾਂ ਪੂਰੀ ਸਕੀਮ ਲਾਇਬ੍ਰੇਰੀ ਵੇਖੋ:`,
+      actionButton: {
+        label: 'ਸਕੀਮ ਲਾਇਬ੍ਰੇਰੀ ਵੇਖੋ',
+        route: '/library',
+      },
+      intent: 'FALLBACK',
+      language,
+    };
+  }
+
   return {
     text: `### Scheme Saathi Information Guide\n\nI could not find a specific scheme matching your exact words in our verified government database.\n\nTo help you accurately, try:\n• Mentioning a scheme name (e.g. **PM-KISAN**, **Ayushman Bharat**, **PM Awas**, **PM Mudra**, **Atal Pension**, **NSP Scholarship**)\n• Asking by category (e.g. *"What schemes are available for farmers?"*, *"Scholarships for students"*)\n• Asking a specific question (e.g. *"What are the benefits of PM-KISAN?"*, *"What documents are needed for Ayushman Bharat?"*)\n\nYou can also browse the full verified scheme library:`,
     actionButton: {
@@ -1538,52 +1982,82 @@ export function getLocalizedMessageText(msg: ChatMessage, targetLang: SupportedL
   // For user messages: translate recognized queries or return original
   if (msg.role === 'user') {
     const norm = normalize(msg.text);
-    if (norm.includes('pm kisan') || norm.includes('pm-kisan') || norm.includes('ಪಿಎಂ ಕಿಸಾನ್') || norm.includes('पीएम किसान')) {
-      if (norm.includes('benefit') || norm.includes('ಪ್ರಯೋಜನ') || norm.includes('लाभ')) {
+    if (norm.includes('pm kisan') || norm.includes('pm-kisan') || norm.includes('ಪಿಎಂ ಕಿಸಾನ್') || norm.includes('पीएम किसान') || norm.includes('ਪੀਐਮ ਕਿਸਾਨ')) {
+      if (norm.includes('benefit') || norm.includes('ಪ್ರಯೋಜನ') || norm.includes('लाभ') || norm.includes('ਲਾਭ')) {
         if (targetLang === 'Kannada') return 'PM-KISAN ನ ಪ್ರಯೋಜನಗಳೇನು?';
         if (targetLang === 'Hindi') return 'PM-KISAN के क्या लाभ हैं?';
+        if (targetLang === 'Punjabi') return 'PM-KISAN ਦੇ ਕੀ ਲਾਭ ਹਨ?';
         return 'What are its benefits?';
       }
-      if (norm.includes('eligible') || norm.includes('ಅರ್ಹ') || norm.includes('पात्र')) {
-        if (norm.includes('am i') || norm.includes('ನಾನು') || norm.includes('क्या मैं')) {
+      if (norm.includes('eligible') || norm.includes('ಅರ್ಹ') || norm.includes('पात्र') || norm.includes('ਯੋਗ')) {
+        if (norm.includes('am i') || norm.includes('ನಾನು') || norm.includes('क्या मैं') || norm.includes('ਕੀ ਮੈਂ')) {
           if (targetLang === 'Kannada') return 'ನಾನು ಈ ಯೋಜನೆಗೆ ಅರ್ಹನೇ?';
           if (targetLang === 'Hindi') return 'क्या मैं इस योजना के लिए पात्र हूँ?';
+          if (targetLang === 'Punjabi') return 'ਕੀ ਮੈਂ ਇਸ ਸਕੀਮ ਲਈ ਯੋਗ ਹਾਂ?';
           return 'Am I eligible for this scheme?';
         }
         if (targetLang === 'Kannada') return 'ಯಾರು ಅರ್ಹರು?';
         if (targetLang === 'Hindi') return 'कौन पात्र है?';
+        if (targetLang === 'Punjabi') return 'ਕੌਣ ਯੋਗ ਹੈ?';
         return 'Who is eligible?';
       }
-      if (norm.includes('document') || norm.includes('ದಾಖಲೆ') || norm.includes('दस्तावेज')) {
+      if (norm.includes('document') || norm.includes('ದಾಖಲೆ') || norm.includes('दस्तावेज') || norm.includes('ਦਸਤਾਵੇਜ਼')) {
         if (targetLang === 'Kannada') return 'ಯಾವ ದಾಖಲೆಗಳು ಬೇಕು?';
         if (targetLang === 'Hindi') return 'कौन से दस्तावेज चाहिए?';
+        if (targetLang === 'Punjabi') return 'ਕਿਹੜੇ ਦਸਤਾਵੇਜ਼ ਚਾਹੀਦੇ ਹਨ?';
         return 'What documents are required?';
       }
-      if (norm.includes('apply') || norm.includes('ಅರ್ಜಿ') || norm.includes('आवेदन')) {
+      if (norm.includes('apply') || norm.includes('ಅರ್ಜಿ') || norm.includes('आवेदन') || norm.includes('ਅਰਜ਼ੀ')) {
         if (targetLang === 'Kannada') return 'ಅರ್ಜಿ ಸಲ್ಲಿಸುವುದು ಹೇಗೆ?';
         if (targetLang === 'Hindi') return 'आवेदन कैसे करें?';
+        if (targetLang === 'Punjabi') return 'ਅਰਜ਼ੀ ਕਿਵੇਂ ਦੇਣੀ ਹੈ?';
         return 'How can I apply?';
       }
-      if (norm.includes('link') || norm.includes('ಲಿಂಕ್') || norm.includes('लिंक')) {
+      if (norm.includes('link') || norm.includes('ಲಿಂಕ್') || norm.includes('लिंक') || norm.includes('ਲਿੰਕ')) {
         if (targetLang === 'Kannada') return 'ಅಧಿಕೃತ ಅರ್ಜಿ ಲಿಂಕ್ ನೀಡಿ.';
         if (targetLang === 'Hindi') return 'आधिकारिक आवेदन लिंक दें।';
+        if (targetLang === 'Punjabi') return 'ਅਧਿਕਾਰਤ ਅਰਜ਼ੀ ਲਿੰਕ ਦਿਓ।';
         return 'Give me the official application link.';
       }
       if (targetLang === 'Kannada') return 'PM-KISAN ಬಗ್ಗೆ ತಿಳಿಸಿ.';
       if (targetLang === 'Hindi') return 'PM-KISAN के बारे में बताइए।';
+      if (targetLang === 'Punjabi') return 'PM-KISAN ਬਾਰੇ ਦੱਸੋ।';
       return 'Tell me about PM-KISAN.';
     }
 
-    if (norm.includes('farmer') || norm.includes('ರೈತ') || norm.includes('किसान')) {
+    if (norm.includes('farmer') || norm.includes('ರೈತ') || norm.includes('किसान') || norm.includes('ਕਿਸਾਨ')) {
       if (targetLang === 'Kannada') return 'ರೈತರಿಗೆ ಬೇರೆ ಯಾವ ಯೋಜನೆಗಳಿವೆ?';
       if (targetLang === 'Hindi') return 'किसानों के लिए अन्य योजनाएं क्या हैं?';
+      if (targetLang === 'Punjabi') return 'ਕਿਸਾਨਾਂ ਲਈ ਹੋਰ ਕਿਹੜੀਆਂ ਸਕੀਮਾਂ ਹਨ?';
       return 'What other schemes are available for farmers?';
     }
 
-    if (norm.includes('document') || norm.includes('ದಾಖಲೆ') || norm.includes('दस्तावेज')) {
+    if (norm.includes('document') || norm.includes('ದಾಖಲೆ') || norm.includes('दस्तावेज') || norm.includes('ਦਸਤਾਵੇਜ਼')) {
       if (targetLang === 'Kannada') return 'ಈ ಯೋಜನೆಗೆ ಯಾವ ದಾಖಲೆಗಳು ಬೇಕು?';
       if (targetLang === 'Hindi') return 'इस योजना के लिए कौन से दस्तावेज चाहिए?';
+      if (targetLang === 'Punjabi') return 'ਇਸ ਸਕੀਮ ਲਈ ਕਿਹੜੇ ਦਸਤਾਵੇਜ਼ ਚਾਹੀਦੇ ਹਨ?';
       return 'What documents are required for this scheme?';
+    }
+
+    if (norm.includes('student') || norm.includes('scholarship') || norm.includes('ವಿದ್ಯಾರ್ಥಿ') || norm.includes('छात्र') || norm.includes('ਵਿਦਿਆਰਥੀ')) {
+      if (targetLang === 'Kannada') return 'ವಿದ್ಯಾರ್ಥಿಗಳಿಗೆ ವಿದ್ಯಾರ್ಥಿವೇತನಗಳು';
+      if (targetLang === 'Hindi') return 'छात्रों के लिए छात्रवृत्तियां';
+      if (targetLang === 'Punjabi') return 'ਵਿਦਿਆਰਥੀਆਂ ਲਈ ਵਜ਼ੀਫ਼ੇ';
+      return 'Scholarships for students';
+    }
+
+    if (norm.includes('women') || norm.includes('ಮಹಿಳೆ') || norm.includes('महिला') || norm.includes('ਔਰਤ') || norm.includes('ਮਹਿਲਾ')) {
+      if (targetLang === 'Kannada') return 'ಮಹಿಳಾ ಉದ್ಯಮಿಗಳಿಗೆ ಯೋಜನೆಗಳು';
+      if (targetLang === 'Hindi') return 'महिला उद्यमियों के लिए योजनाएं';
+      if (targetLang === 'Punjabi') return 'ਮਹਿਲਾ ਉੱਦਮੀਆਂ ਲਈ ਸਕੀਮਾਂ';
+      return 'Schemes for women entrepreneurs';
+    }
+
+    if (norm.includes('health') || norm.includes('ಆರೋಗ್ಯ') || norm.includes('स्वास्थ्य') || norm.includes('ਸਿਹਤ')) {
+      if (targetLang === 'Kannada') return 'ಆರೋಗ್ಯ ಯೋಜನೆಗಳು';
+      if (targetLang === 'Hindi') return 'स्वास्थ्य योजनाएं';
+      if (targetLang === 'Punjabi') return 'ਸਿਹਤ ਸਕੀਮਾਂ';
+      return 'Health schemes';
     }
 
     return msg.text;
@@ -1597,37 +2071,37 @@ export function getLocalizedMessageText(msg: ChatMessage, targetLang: SupportedL
     findSchemeInText(msg.text);
   const textNorm = normalize(msg.text);
 
-  if (msg.isSafetyWarning || textNorm.includes('safety') || textNorm.includes('ಸುರಕ್ಷತಾ') || textNorm.includes('सुरक्षा')) {
+  if (msg.isSafetyWarning || textNorm.includes('safety') || textNorm.includes('ಸುರಕ್ಷತಾ') || textNorm.includes('सुरक्षा') || textNorm.includes('ਸੁਰੱਖਿਆ')) {
     return formatSafetyWarning(targetLang).text;
   }
 
-  if (textNorm.includes('namaste') || textNorm.includes('ನಮಸ್ಕಾರ') || textNorm.includes('नमस्ते')) {
+  if (textNorm.includes('namaste') || textNorm.includes('ನಮಸ್ಕಾರ') || textNorm.includes('नमस्ते') || textNorm.includes('ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ') || textNorm.includes('ਸਤਿ ਸ਼੍ਰੀ ਅਕਾਲ')) {
     return formatGreetingResponse(null, targetLang).text;
   }
 
   if (scheme) {
-    if (textNorm.includes('financial') || textNorm.includes('benefit') || textNorm.includes('ಪ್ರಯೋಜನ') || textNorm.includes('लाभ') || textNorm.includes('6 000')) {
+    if (textNorm.includes('financial') || textNorm.includes('benefit') || textNorm.includes('ಪ್ರಯೋಜನ') || textNorm.includes('लाभ') || textNorm.includes('ਲਾਭ') || textNorm.includes('6 000')) {
       return formatBenefitsResponse(scheme, targetLang).text;
     }
-    if (textNorm.includes('document') || textNorm.includes('ದಾಖಲೆ') || textNorm.includes('दस्तावेज')) {
+    if (textNorm.includes('document') || textNorm.includes('ದಾಖಲೆ') || textNorm.includes('दस्तावेज') || textNorm.includes('ਦਸਤਾਵੇਜ਼')) {
       return formatDocumentsResponse(scheme, targetLang).text;
     }
-    if (textNorm.includes('apply') || textNorm.includes('application') || textNorm.includes('ಅರ್ಜಿ') || textNorm.includes('आवेदन')) {
+    if (textNorm.includes('apply') || textNorm.includes('application') || textNorm.includes('ಅರ್ಜಿ') || textNorm.includes('आवेदन') || textNorm.includes('ਅਰਜ਼ੀ')) {
       return formatApplicationProcessResponse(scheme, targetLang).text;
     }
-    if (textNorm.includes('link') || textNorm.includes('ಲಿಂಕ್') || textNorm.includes('लिंक') || textNorm.includes('website')) {
+    if (textNorm.includes('link') || textNorm.includes('ಲಿಂಕ್') || textNorm.includes('लिंक') || textNorm.includes('ਲਿੰਕ') || textNorm.includes('website')) {
       return formatOfficialLinkResponse(scheme, targetLang).text;
     }
-    if (textNorm.includes('assessment') || textNorm.includes('ಮೌಲ್ಯಮಾಪನ') || textNorm.includes('मूल्यांकन')) {
+    if (textNorm.includes('assessment') || textNorm.includes('ಮೌಲ್ಯಮಾಪನ') || textNorm.includes('मूल्यांकन') || textNorm.includes('ਮੁਲਾਂਕਣ')) {
       return formatPersonalEligibilityResponse(scheme, null, targetLang).text;
     }
-    if (textNorm.includes('who can apply') || textNorm.includes('eligible') || textNorm.includes('ಅರ್ಹತಾ') || textNorm.includes('पात्रता')) {
+    if (textNorm.includes('who can apply') || textNorm.includes('eligible') || textNorm.includes('ಅರ್ಹತಾ') || textNorm.includes('पात्रता') || textNorm.includes('ਯੋਗਤਾ')) {
       return formatGeneralEligibilityResponse(scheme, targetLang).text;
     }
     return formatGeneralSchemeInfoResponse(scheme, targetLang).text;
   }
 
-  if (textNorm.includes('farmers') || textNorm.includes('ರೈತ') || textNorm.includes('किसान')) {
+  if (textNorm.includes('farmers') || textNorm.includes('ರೈತ') || textNorm.includes('किसान') || textNorm.includes('ਕਿਸਾਨ')) {
     return formatCategoryRecommendations('Farmers', undefined, targetLang).text;
   }
 

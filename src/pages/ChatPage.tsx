@@ -505,7 +505,7 @@ export const ChatPage: React.FC = () => {
 
       {/* Main Area */}
       <main className="flex-1 flex flex-col h-full min-w-0 bg-[var(--color-bg)] relative">
-        {/* Header: chat title on left, theme toggle on right */}
+        {/* Header: chat title on left, language selector & theme toggle on right */}
         <header className="h-16 px-4 sm:px-6 border-b border-[var(--color-border)] bg-[var(--color-surface)]/90 backdrop-blur-md flex items-center justify-between shrink-0 z-20">
           <div className="flex items-center gap-3 min-w-0">
             <button
@@ -517,7 +517,9 @@ export const ChatPage: React.FC = () => {
               <Menu className="w-5 h-5" />
             </button>
             <h1 className="text-sm sm:text-base font-bold text-[var(--color-text)] truncate">
-              {activeChat?.title || t.newChat || 'New chat'}
+              {(!activeChat?.title || activeChat.title.toLowerCase() === 'new chat' || activeChat.title === 'ಹೊಸ ಚಾಟ್' || activeChat.title === 'नई चैट' || activeChat.title === 'ਨਵੀਂ ਚੈਟ')
+                ? t.newChat
+                : activeChat.title}
             </h1>
           </div>
 
